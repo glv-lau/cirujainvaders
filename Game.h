@@ -3,6 +3,7 @@
 #include "Scene.h"
 #include "Match.h"
 #include <SFML/Graphics/RenderWindow.hpp>
+
 using namespace sf;
 class Game {
     public:
