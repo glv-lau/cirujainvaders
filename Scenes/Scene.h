@@ -1,7 +1,5 @@
-¬¬
-
-#ifdef "Scene.h"
-#define "Scene.h"
+#ifndef SCENE_H
+#define SCENE_H
 #include <SFML/Graphics/RenderWindow.hpp>
 using namespace sf;
 class game;
