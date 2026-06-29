@@ -1,12 +1,12 @@
-#ifdef Game_h
-#define Game_h
+#ifndef GAME_H
+#define GAME_H
 #include "Scene.h"
 #include "Match.h"
 #include <SFML/Graphics/RenderWindow.hpp>
 using namespace sf;
 class Game {
     public:
-    Game (Scene *e ,score 0);
+    Game(Scene* e ,int score = 0);
     void play();
     ~Game();
 	void SetScene(Scene *next_scene);
