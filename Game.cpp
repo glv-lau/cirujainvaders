@@ -4,9 +4,11 @@
 
 using namespace sf;
 
-Game::Game (Scene * e): m_win (VideoMode(800,600), "Ciruja Invaders"){
-    m_win.setFramerateLimit(60);
-    Scene *m_scene;
+Game::Game (Scene * e)
+    : m_win (VideoMode(800,600), "Ciruja Invaders"),
+    m_scene = e;
+{
+     m_win.setFramerateLimit(60);
 }
 
 void Game::play (){
