@@ -4,7 +4,8 @@
 
 SceneMenu::SceneMenu()
 {
-    if (!m_font.loadFromFile("arial.ttf")) {
+    if (!m_font.loadFromFile("arial.ttf"))
+    {
         return;
     }
 
@@ -29,20 +30,49 @@ SceneMenu::SceneMenu()
     m_exitText.setPosition(230.f, 380.f);
 }
 
-void SceneMenu::update(float dt, Game& game) {
+void SceneMenu::update(float dt, Game &game)
+{
     (void)dt;
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Return)) {
-        // TODO: cambiar a Match cuando se integre el menu
+    if (event.type == sf::Event::KeyPressed)
+    {
+        if (event.key.code == sf::Keyboard::up)
+        {
+            mod_opcion(-1);
+        }
+        if (event.key.code == sf::Keyboard::down)
+        {
+            mod_opcion(1);
+        }
     }
+    if (event.key.code == sf::Keyboard::Enter)
+    {
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+        switch (getSelectedOption())
+        {
+        case 0:
+            // Iniciar juego
+            break;
+
+        case 1:
+            // Abrir opciones
+            break;
+
+        case 2:
+            game.getWindow().close();
+            break;
+        }
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+    {
         game.getWindow().close();
     }
 }
 
-void SceneMenu::draw(sf::RenderWindow& window) {
-    if (!m_fontLoaded) return;
+void SceneMenu::draw(sf::RenderWindow &window)
+{
+    if (!m_fontLoaded)
+        return;
 
     window.draw(m_title);
     window.draw(m_startText);
