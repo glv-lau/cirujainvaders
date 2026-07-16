@@ -98,4 +98,8 @@ void SceneMenu::draw(sf::RenderWindow &window)
     window.draw(m_startText);
     window.draw(m_optionsText);
     window.draw(m_exitText);
+<<<<<<< Updated upstream
 }
+=======
+}
+>>>>>>> Stashed changes

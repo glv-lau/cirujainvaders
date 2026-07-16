@@ -8,6 +8,7 @@
 class SceneMenu : public Scene {
 public:
     SceneMenu();
+<<<<<<< Updated upstream
     ~SceneMenu() override = default;
 
     void update(float dt, Game& game) override;
@@ -34,3 +35,14 @@ private:
 };
 
 #endif
+=======
+    virtual void HandleEvent(const sf::event& event) override;
+    virtual void update(Game &game) override;
+    virtual void Draw(sf::RenderWindow &Window) override;
+    private:
+    Font m_fuente;
+    Text m_titulo;
+    Text m_opciones;
+    Text m_exit;
+};
+>>>>>>> Stashed changes
