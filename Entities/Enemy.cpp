@@ -57,7 +57,8 @@ std::vector<std::unique_ptr<Bullet>> Enemy::shoot() {
             float spread = 60.f; // grados totales
             int n = std::max(1, m_fanCount);
             for (int i = 0; i < n; ++i) {
-                float angle = centerDeg - spread/2.f + (spread * i) / (n - 1.0f);
+                const float step = (n > 1) ? (spread * i) / (n - 1.0f) : 0.f;
+                float angle = centerDeg - spread / 2.f + step;
                 float r = angle * PI_F / 180.f;
                 Vector2f vel(std::cos(r) * m_bulletSpeed, std::sin(r) * m_bulletSpeed);
                 out.push_back(std::make_unique<Bullet>(m_bulletTexture, pos, vel));

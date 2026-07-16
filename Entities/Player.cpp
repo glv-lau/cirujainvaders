@@ -31,7 +31,7 @@ std::unique_ptr<Bullet> Player::shoot(const sf::Texture& bulletTexture) {
 
     Vector2f bulletVel{0.f, -700.f};
 
-    auto b = std::make_unique<Bullet>(bulletTexture, bulletPos, bulletVel);
+    auto b = std::make_unique<Bullet>(bulletTexture, bulletPos, bulletVel, true);
     resetShootTimer();
     return b;
 }

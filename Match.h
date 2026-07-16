@@ -1,23 +1,38 @@
-#ifdef Match_h
-#define Match_h
-#include "Enemy.h"
-#include "Player.h"
-#include "Bullet.h"
-#include "Scene.h"
-#include <vector>
-#include <SFML/Graphics/RenderWindow.hpp>
+#ifndef MATCH_H
+#define MATCH_H
 
-Class Match:public Scene{
-    public:
+#include "Scenes/Scene.h"
+#include "Entities/Player.h"
+#include "Entities/Enemy.h"
+#include "Entities/Bullet.h"
+#include <SFML/Graphics/Texture.hpp>
+#include <memory>
+#include <optional>
+#include <vector>
+
+class Match : public Scene {
+public:
     Match();
-    void Update(Game &g) override;
-    void Draw(RenderWindow &w) override;
-    void add_score(int points){m_score=m_score+points;}
-    int get_score(){return m_score;}
-    private:
-    Player m_player;
-    vector<Enemy> m_wave;
-    vector<Bullet> m_Bullet;
-    int m_score;
-}
+    ~Match() override = default;
+
+    void update(float dt, Game& game) override;
+    void draw(sf::RenderWindow& window) override;
+
+    void addScore(int points) { m_score += points; }
+    int getScore() const { return m_score; }
+
+private:
+    sf::Texture m_playerTex;
+    sf::Texture m_enemyTex;
+    sf::Texture m_bulletTex;
+
+    std::optional<Player> m_player;
+    std::vector<Enemy> m_enemies;
+    std::vector<std::unique_ptr<Bullet>> m_bullets;
+    int m_score = 0;
+
+    void spawnWave();
+    void cleanupDead();
+};
+
 #endif

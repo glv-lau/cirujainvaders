@@ -1,45 +1,34 @@
-#include Button.h
+#include "Button.h"
 
-Button::Button(const font &font, const string &texto, const Vector2f &position, const Vector2f &size)
+Button::Button(const sf::Font& font, const std::string& text, const sf::Vector2f& position, const sf::Vector2f& size)
+    : m_box(size)
+    , m_text(text, font, 20)
 {
-    // Implementación del constructor
+    m_box.setPosition(position);
+    m_box.setFillColor(sf::Color::White);
+    m_box.setOutlineColor(sf::Color::Black);
+    m_box.setOutlineThickness(2.f);
+
+    m_text.setFillColor(sf::Color::Black);
+    const sf::FloatRect bounds = m_text.getLocalBounds();
+    m_text.setPosition(
+        position.x + (size.x - bounds.width) / 2.f,
+        position.y + (size.y - bounds.height) / 2.f - 5.f);
 }
 
-Button::~Button()
-{
-    // Implementación del destructor
+void Button::draw(sf::RenderWindow& window) {
+    window.draw(m_box);
+    window.draw(m_text);
 }
 
-bool Button::contiene(const Vector2f &mousePos)
-{
-    return cuadro.getGlobalBounds().contains(mousePos);
+void Button::update() {
 }
 
-void Button::seleccionar(bool selected)
-{
-    if (selected)
-    {
-        cuadro.setFillColor(Color::Green); // Color cuando el botón está seleccionado
-    }
-    else
-    {
-        cuadro.setFillColor(Color::White); // Color por defecto
-    }
+bool Button::contains(const sf::Vector2f& mousePos) const {
+    return m_box.getGlobalBounds().contains(mousePos);
 }
-if (event.type == Event::MouseButtonPressed)
-{
-    if (event.mouseButton.button == Mouse::Left)
-    {
-        Vector2f mouse =
-            window.mapPixelToCoords(
-                mouse::getPosition(window));
-        if (playButton.contiene(mouse))
-        {
-            // Acción cuando se presiona el botón
-        }
-        if (exitButton.contiene(mouse))
-        {
-            window.close(); // Cierra la ventana si se presiona el botón de salir
-        }
-    }
+
+void Button::setSelected(bool selected) {
+    m_isPressed = selected;
+    m_box.setFillColor(selected ? sf::Color(100, 200, 100) : sf::Color::White);
 }

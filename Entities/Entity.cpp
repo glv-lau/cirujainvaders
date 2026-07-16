@@ -1,5 +1,5 @@
 #include "Entity.h"
-#include <algorithm> // for std::max
+#include <algorithm>
 #include <cmath>
 
 using namespace sf;

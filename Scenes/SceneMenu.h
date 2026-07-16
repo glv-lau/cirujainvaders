@@ -1,16 +1,24 @@
 #ifndef SCENEMENU_H
 #define SCENEMENU_H
-#include "Scene.h"
-using namespace sf;
-class SceneMenu : public Scene{
-    public:
+
+#include "Scenes/Scene.h"
+#include <SFML/Graphics/Font.hpp>
+#include <SFML/Graphics/Text.hpp>
+
+class SceneMenu : public Scene {
+public:
     SceneMenu();
-    virtual void HandleEvent(const sf::event& event) override;
-    virtual void update(Game &game) override;
-    virtual void Draw(sf::RenderWindow &Window) override;
-    private:
-    Font m_fuente;
-    Text m_titulo;
-    Text m_opciones;
-    Text m_exit;
+    ~SceneMenu() override = default;
+
+    void update(float dt, Game& game) override;
+    void draw(sf::RenderWindow& window) override;
+
+private:
+    sf::Font m_font;
+    sf::Text m_title;
+    sf::Text m_startText;
+    sf::Text m_exitText;
+    bool m_fontLoaded = false;
 };
+
+#endif
