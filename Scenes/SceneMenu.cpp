@@ -29,44 +29,40 @@ SceneMenu::SceneMenu()
     m_exitText.setFillColor(sf::Color::White);
     m_exitText.setPosition(230.f, 380.f);
 }
-
-void SceneMenu::update(float dt, Game &game)
+ void SceneMenu::handleEvent(const sf::Event& event, Game& game)
 {
-    (void)dt;
-
     if (event.type == sf::Event::KeyPressed)
     {
-        if (event.key.code == sf::Keyboard::up)
+        if (event.key.code == sf::Keyboard::Up)
         {
             mod_opcion(-1);
         }
-        if (event.key.code == sf::Keyboard::down)
+        else if (event.key.code == sf::Keyboard::Down)
         {
             mod_opcion(1);
         }
-    }
-    if (event.key.code == sf::Keyboard::Enter)
-    {
-
-        switch (getSelectedOption())
+        else if (event.key.code == sf::Keyboard::Enter)
         {
-        case 0:
-            // Iniciar juego
-            break;
+            switch (getSelectedOption())
+            {
+            case 0:
+                game.changeScene(new SceneGame());
+                break;
 
-        case 1:
-            // Abrir opciones
-            break;
+            case 1:
+                game.changeScene(new SceneOptions());
+                break;
 
-        case 2:
-            game.getWindow().close();
-            break;
+            case 2:
+                game.getWindow().close();
+                break;
+            }
         }
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-    {
-        game.getWindow().close();
-    }
+}
+void SceneMenu::update(float dt, Game &game)
+{
+    (void)dt;
 }
 
 void SceneMenu::draw(sf::RenderWindow &window)

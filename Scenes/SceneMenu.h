@@ -20,6 +20,9 @@ public:
             m_selectedOption = 0;
         }
     }
+    int getSelectedOption() const { return m_selectedOption; }
+    void handleEvent(const sf::Event& event, Game& game) override;
+    
 private:
     sf::Font m_font;
     sf::Text m_title;
