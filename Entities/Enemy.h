@@ -39,7 +39,10 @@ public:
 
     // Simple movement setters
     void setVelocity(const sf::Vector2f& v) { m_velocity = v; }
-    void setAmplitude(float a) { m_amplitude = a; } // para sinusoide
+    void setAmplitude(float a) { m_amplitude = a; }
+
+    void configureAsBoss(int level);
+    bool isBoss() const { return m_isBoss; }
 
 private:
     const sf::Texture& m_bulletTexture;
@@ -60,5 +63,6 @@ private:
 
     // movement helpers
     float m_timeAlive = 0.f;
-    float m_amplitude = 40.f; // amplitude for sin movement
+    float m_amplitude = 40.f;
+    bool m_isBoss = false;
 };

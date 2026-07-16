@@ -17,6 +17,7 @@ add_executable(CirujaInvaders
     Entities/Player.cpp
     Entities/Enemy.cpp
     Entities/Bullet.cpp
+    Entities/PowerUp.cpp
 )
 
 target_include_directories(CirujaInvaders PRIVATE
