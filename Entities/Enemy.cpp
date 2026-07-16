@@ -90,7 +90,20 @@ std::vector<std::unique_ptr<Bullet>> Enemy::shoot() {
         }
     }
 
-    // resetear timer
     m_shootTimer = m_shootCooldown;
     return out;
+}
+
+void Enemy::configureAsBoss(int level) {
+    m_isBoss = true;
+    m_hp = 20 + level * 8;
+    setScale(Vector2f(2.2f, 2.2f));
+    setColor(Color(180, 50, 255));
+    setRotation(180.f);
+    setPattern(PatternType::Spiral);
+    setShootCooldown(0.7f);
+    setBulletSpeed(160.f + level * 15.f);
+    setSpiralSpeed(140.f);
+    setVelocity(Vector2f(0.f, 25.f));
+    setAmplitude(80.f);
 }
