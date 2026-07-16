@@ -14,3 +14,6 @@ class SceneMenu : public Scene{
     Text m_opciones;
     Text m_exit;
 };
+
+
+
