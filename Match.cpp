@@ -46,7 +46,7 @@ Match::Match()
         m_gameOverText.setPosition(220.f, 250.f);
     }
 
-    m_player.emplace(m_playerTex, sf::Vector2f(400.f, 520.f));
+	m_player.reset(new Player(m_playerTex, sf::Vector2f(400.f, 520.f)));
     spawnWave();
     m_waveTransitionTimer = 1.5f;
 }
@@ -204,7 +204,7 @@ void Match::resetMatch() {
     m_bullets.clear();
     m_enemies.clear();
     m_powerUps.clear();
-    m_player.emplace(m_playerTex, sf::Vector2f(400.f, 520.f));
+	m_player.reset(new Player(m_playerTex, sf::Vector2f(400.f, 520.f)));
     spawnWave();
 }
 

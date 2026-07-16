@@ -16,7 +16,7 @@ public:
 
     virtual void update(float dt);
 
-    virtual void draw(sf::RenderWindow& win);
+    virtual void draw(sf::RenderWindow& win) const;
 
     virtual sf::FloatRect getBounds() const;
 

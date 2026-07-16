@@ -41,7 +41,7 @@ void Player::update(float dt) {
     if (m_shootTimer > 0.f) m_shootTimer -= dt;
 }
 
-void Player::draw(RenderWindow& win) {
+void Player::draw(RenderWindow& win) const {
     if (!isAlive()) return;
 
     if (isInvulnerable() && std::fmod(m_blinkTimer, 0.15f) < 0.075f) {

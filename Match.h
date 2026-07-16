@@ -9,9 +9,11 @@
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <memory>
-#include <optional>
 #include <random>
+#include <memory>
+#include "Entities/Player.h"
 #include <vector>
+
 
 class Match : public Scene {
 public:
@@ -37,7 +39,7 @@ private:
     sf::Text m_waveText;
     sf::Text m_gameOverText;
 
-    std::optional<Player> m_player;
+
     std::vector<Enemy> m_enemies;
     std::vector<std::unique_ptr<Bullet>> m_bullets;
     std::vector<PowerUp> m_powerUps;
@@ -50,7 +52,7 @@ private:
     float m_waveTransitionTimer = 0.f;
     bool m_gameOver = false;
 
-    std::mt19937 m_rng;
+
 
     void spawnWave();
     void spawnNormalWave(int waveIndex);
@@ -60,6 +62,9 @@ private:
     void checkCollisions();
     void drawHud(sf::RenderWindow& window);
     void resetMatch();
+	
+	std::mt19937 m_rng;
+	std::unique_ptr<Player> m_player;
 };
 
 #endif

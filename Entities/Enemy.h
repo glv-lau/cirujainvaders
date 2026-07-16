@@ -45,7 +45,7 @@ public:
     bool isBoss() const { return m_isBoss; }
 
 private:
-    const sf::Texture& m_bulletTexture;
+    const sf::Texture *m_bulletTexture;
 
     int m_hp = 1;
 

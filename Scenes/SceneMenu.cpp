@@ -1,5 +1,5 @@
 #include "SceneMenu.h"
-#include "Game.h"
+#include "../Game.h"
 #include <SFML/Window/Keyboard.hpp>
 
 SceneMenu::SceneMenu()

@@ -11,7 +11,7 @@ void Entity::update(float dt) {
     }
 }
 
-void Entity::draw(RenderWindow& win) {
+void Entity::draw(RenderWindow& win) const {
     if (m_alive && m_visible) {
         win.draw(m_sprite);
     }

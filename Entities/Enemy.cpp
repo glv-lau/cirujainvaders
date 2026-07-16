@@ -8,7 +8,7 @@ using namespace sf;
 static constexpr float PI_F = 3.14159265358979323846f;
 
 Enemy::Enemy(const Texture& tex, const Texture& bulletTex, const Vector2f& pos)
-    : m_bulletTexture(bulletTex)
+    : m_bulletTexture(&bulletTex)
 {
     setTexture(tex, true);
     setPosition(pos);
@@ -48,7 +48,7 @@ std::vector<std::unique_ptr<Bullet>> Enemy::shoot() {
         case PatternType::Single: {
             // disparo simple hacia abajo
             Vector2f vel(0.f, m_bulletSpeed);
-            out.push_back(std::make_unique<Bullet>(m_bulletTexture, pos, vel));
+            out.push_back(std::make_unique<Bullet>(*m_bulletTexture, pos, vel));
             break;
         }
         case PatternType::Fan: {
@@ -61,7 +61,7 @@ std::vector<std::unique_ptr<Bullet>> Enemy::shoot() {
                 float angle = centerDeg - spread / 2.f + step;
                 float r = angle * PI_F / 180.f;
                 Vector2f vel(std::cos(r) * m_bulletSpeed, std::sin(r) * m_bulletSpeed);
-                out.push_back(std::make_unique<Bullet>(m_bulletTexture, pos, vel));
+                out.push_back(std::make_unique<Bullet>(*m_bulletTexture, pos, vel));
             }
             break;
         }
@@ -71,7 +71,7 @@ std::vector<std::unique_ptr<Bullet>> Enemy::shoot() {
                 float angle = (360.f * i) / n;
                 float r = angle * PI_F / 180.f;
                 Vector2f vel(std::cos(r) * m_bulletSpeed, std::sin(r) * m_bulletSpeed);
-                out.push_back(std::make_unique<Bullet>(m_bulletTexture, pos, vel));
+                out.push_back(std::make_unique<Bullet>(*m_bulletTexture, pos, vel));
             }
             break;
         }
@@ -81,11 +81,11 @@ std::vector<std::unique_ptr<Bullet>> Enemy::shoot() {
             float angle = m_spiralAngle;
             float r = angle * PI_F / 180.f;
             Vector2f vel(std::cos(r) * m_bulletSpeed, std::sin(r) * m_bulletSpeed);
-            out.push_back(std::make_unique<Bullet>(m_bulletTexture, pos, vel));
+            out.push_back(std::make_unique<Bullet>(*m_bulletTexture, pos, vel));
             // opcional: una segunda bala con offset
             float r2 = (angle + 20.f) * PI_F / 180.f;
             Vector2f vel2(std::cos(r2) * m_bulletSpeed, std::sin(r2) * m_bulletSpeed);
-            out.push_back(std::make_unique<Bullet>(m_bulletTexture, pos, vel2));
+            out.push_back(std::make_unique<Bullet>(*m_bulletTexture, pos, vel2));
             break;
         }
     }

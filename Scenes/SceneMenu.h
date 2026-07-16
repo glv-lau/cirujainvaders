@@ -1,7 +1,7 @@
 #ifndef SCENEMENU_H
 #define SCENEMENU_H
 
-#include "Scenes/Scene.h"
+#include "Scene.h"
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>
 
