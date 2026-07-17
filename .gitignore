@@ -1,0 +1,12 @@
+# Ignorar binarios y archivos objeto compilados
+*.o
+*.exe
+*.dll
+
+# Ignorar carpetas de compilación
+Debug_Win32/
+Release/
+
+# Ignorar archivos de configuración del IDE Zinjai
+*.zpr
+*.zpr.bak
