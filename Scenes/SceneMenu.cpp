@@ -8,6 +8,9 @@ SceneMenu::SceneMenu()
     {
         return;
     }
+    void SceneMenu::onEnter(Game& game) {
+        game.playmusic("menu_music.ogg", game.getmusicvolume(), true);
+    }//nombre de la música placeholder
 
     m_fontLoaded = true;
 
@@ -35,6 +38,15 @@ SceneMenu::SceneMenu()
     m_optionsText.setFillColor(sf::Color::White);
     m_optionsText.setPosition(230.f, 350.f);
 }
+void mod_opcion(int valor){
+        m_selectedOption += valor;
+        if (m_selectedOption < 0) {
+            m_selectedOption = 2;
+        } else if (m_selectedOption > 2) {
+            m_selectedOption = 0;
+        }
+    }
+
  void SceneMenu::handleEvent(const sf::Event& event, Game& game)
 {
     if (event.type == sf::Event::KeyPressed)
@@ -49,10 +61,10 @@ SceneMenu::SceneMenu()
         }
         else if (event.key.code == sf::Keyboard::Enter)
         {
-            switch (getSelectedOption())
+            switch (m_selectedOption)
             {
             case 0:
-                game.changeScene(new SceneGame());
+                game.changeScene(new SceneMatch());
                 break;
 
             case 1:
@@ -66,7 +78,7 @@ SceneMenu::SceneMenu()
         }
     }
 }
-void SceneMenu::update(float dt, Game &game)
+void SceneMenu::update(float dt, (void)game)
 {
     (void)dt;
     switch (getSelectedOption())
@@ -98,8 +110,4 @@ void SceneMenu::draw(sf::RenderWindow &window)
     window.draw(m_startText);
     window.draw(m_optionsText);
     window.draw(m_exitText);
-<<<<<<< Updated upstream
 }
-=======
-}
->>>>>>> Stashed changes
