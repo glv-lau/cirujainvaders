@@ -1,7 +1,6 @@
 #ifndef GAME_H
 #define GAME_H
 #include "Scene.h"
-#include "Match.h"
 #include <SFML/Graphics/RenderWindow.hpp>
 
 using namespace sf;
