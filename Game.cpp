@@ -41,58 +41,10 @@ void Game::play() {
             delete m_scene;
             m_scene = m_nextScene;
             m_nextScene = nullptr;
-            m_scene->onEnter(*this);
         }
     }
 }
 
 void Game::setScene(Scene* nextScene) {
     m_nextScene = nextScene;
-}
-void Game::setmusicvolume(int volume) {
-    musicVolume = volume;
-    m_music.setVolume(volume*static_cast<float>(masterVolume) / 100.0f);
-}
-int Game::getmusicvolume() const {
-    return musicVolume;
-}
-
-void Game::enableMusic(bool enabled)
-{
-    m_musicEnabled = enabled;
-
-    if (enabled)
-        m_music.play();
-    else
-        m_music.stop();
-}
-void Game::playmusic(const std::string& filename, int volume, bool loop) {
-    if (m_music.openFromFile(filename)) {
-        m_music.setVolume(static_cast<float>(volume*masterVolume) / 100.0f);
-        m_music.setLoop(loop);
-        m_music.play();
-    }
-}
-
-void game::setsfxvolume(int volume) {
-    sfxVolume = volume;
-    m_sfx.setVolume(volume*static_cast<float>(masterVolume) / 100.0f);
-}
-int getsfxvolume() const {
-    return sfxVolume;
-}
-
-void game::setmastvolume(int volume) {
-    masterVolume = volume;
-    m_master.setVolume(volume);
-}
-int getmastvolume() const {
-    return masterVolume;
-}
-
-void setHudSize(int size) {
-    HudSize = size;
-}
-int getHudSize() const {
-    return HudSize;
 }

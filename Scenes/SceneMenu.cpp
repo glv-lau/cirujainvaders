@@ -4,13 +4,9 @@
 
 SceneMenu::SceneMenu()
 {
-    if (!m_font.loadFromFile("arial.ttf"))
-    {
+    if (!m_font.loadFromFile("arial.ttf")) {
         return;
     }
-    void SceneMenu::onEnter(Game& game) {
-        game.playmusic("menu_music.ogg", game.getmusicvolume(), true);
-    }//nombre de la música placeholder
 
     m_fontLoaded = true;
 
@@ -22,92 +18,33 @@ SceneMenu::SceneMenu()
 
     m_startText.setFont(m_font);
     m_startText.setCharacterSize(24);
-    m_startText.setString("Jugar");
+    m_startText.setString("Presiona Enter para jugar");
     m_startText.setFillColor(sf::Color::White);
     m_startText.setPosition(240.f, 320.f);
 
     m_exitText.setFont(m_font);
     m_exitText.setCharacterSize(24);
-    m_exitText.setString("Salir");
+    m_exitText.setString("Presiona Escape para salir");
     m_exitText.setFillColor(sf::Color::White);
     m_exitText.setPosition(230.f, 380.f);
-
-    m_optionsText.setFont(m_font);
-    m_optionsText.setCharacterSize(24);
-    m_optionsText.setString("Opciones");
-    m_optionsText.setFillColor(sf::Color::White);
-    m_optionsText.setPosition(230.f, 350.f);
 }
-void mod_opcion(int valor){
-        m_selectedOption += valor;
-        if (m_selectedOption < 0) {
-            m_selectedOption = 2;
-        } else if (m_selectedOption > 2) {
-            m_selectedOption = 0;
-        }
-    }
 
- void SceneMenu::handleEvent(const sf::Event& event, Game& game)
-{
-    if (event.type == sf::Event::KeyPressed)
-    {
-        if (event.key.code == sf::Keyboard::Up)
-        {
-            mod_opcion(-1);
-        }
-        else if (event.key.code == sf::Keyboard::Down)
-        {
-            mod_opcion(1);
-        }
-        else if (event.key.code == sf::Keyboard::Enter)
-        {
-            switch (m_selectedOption)
-            {
-            case 0:
-                game.changeScene(new SceneMatch());
-                break;
-
-            case 1:
-                game.changeScene(new SceneOptions());
-                break;
-
-            case 2:
-                game.getWindow().close();
-                break;
-            }
-        }
-    }
-}
-void SceneMenu::update(float dt, (void)game)
-{
+void SceneMenu::update(float dt, Game& game) {
     (void)dt;
-    switch (getSelectedOption())
-    {
-        case 0:
-            m_startText.setFillColor(sf::Color::Yellow);
-            m_optionsText.setFillColor(sf::Color::White);
-            m_exitText.setFillColor(sf::Color::White);
-            break;
-        case 1:
-            m_startText.setFillColor(sf::Color::White);
-            m_optionsText.setFillColor(sf::Color::Yellow);
-            m_exitText.setFillColor(sf::Color::White);
-            break;
-        case 2:
-            m_startText.setFillColor(sf::Color::White);
-            m_optionsText.setFillColor(sf::Color::White);
-            m_exitText.setFillColor(sf::Color::Yellow);
-            break;
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Return)) {
+        // TODO: cambiar a Match cuando se integre el menu
+    }
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+        game.getWindow().close();
     }
 }
 
-void SceneMenu::draw(sf::RenderWindow &window)
-{
-    if (!m_fontLoaded)
-        return;
+void SceneMenu::draw(sf::RenderWindow& window) {
+    if (!m_fontLoaded) return;
 
     window.draw(m_title);
     window.draw(m_startText);
-    window.draw(m_optionsText);
     window.draw(m_exitText);
 }
