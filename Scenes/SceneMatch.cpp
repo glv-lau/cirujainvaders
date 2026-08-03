@@ -9,6 +9,24 @@ SceneMatch::SceneMatch() {
     void SceneMenu::onEnter(Game& game) {
         game.playmusic("match_music.ogg", game.getmusicvolume(), true);
     }
+    void SceneMatch::update(float dt, Game& game) {
+        m_match.update(game);
+        m_puntostext.setString("Puntos: " + std::to_string(m_match.get_score()));
+        m_vidastext.setString("Vidas: " + std::to_string(m_vidas));
+        m_player.update();
+       for (Bullet& bullet : m_bullets) {bullet.update(dt);}
+        
+    }
+    void SceneMatch::draw(sf::RenderWindow& window) {
+        window.clear();
+        m_match.draw(window);
+        window.draw(m_lvltext);
+        window.draw(m_puntostext);
+        window.draw(m_vidastext);
+        window.draw(m_powerupText);
+        m_player.draw(window);
+        bullet.draw(window);
+    }
     m_fontLoaded = true;
 
     m_lvltext.setFont(m_font);
