@@ -6,24 +6,53 @@
 #include <iostream>
 #include <sstream>
 
+static bool loadColoredTexture(sf::Texture& texture, const sf::Color& color,
+    unsigned int width = 40u, unsigned int height = 40u)
+{
+    sf::Image img;
+    img.create(width, height, color);
+    return texture.loadFromImage(img);
+}
+
 Match::Match()
     : m_rng(std::random_device{}())
 {
     if (!m_playerTex.loadFromFile("Nave.png")) {
         std::cerr << "Error: no se pudo cargar Nave.png\n";
+        if (!loadColoredTexture(m_playerTex, sf::Color(80, 180, 255), 48, 48)) {
+            std::cerr << "Error: no se pudo crear textura del jugador\n";
+        }
     }
-    if (!m_enemyTex.loadFromFile("Nave.png")) {
-        std::cerr << "Error: no se pudo cargar textura de enemigo\n";
+
+    if (!m_enemyEasyTex.loadFromFile("EnemyEasy.png")) {
+        if (!loadColoredTexture(m_enemyEasyTex, sf::Color(255, 120, 120), 40, 40)) {
+            std::cerr << "Error: no se pudo crear textura de enemigo facil\n";
+        }
+    }
+    if (!m_enemyHardTex.loadFromFile("EnemyHard.png")) {
+        if (!loadColoredTexture(m_enemyHardTex, sf::Color(220, 80, 220), 42, 42)) {
+            std::cerr << "Error: no se pudo crear textura de enemigo duro\n";
+        }
+    }
+    if (!m_enemySpecialTex.loadFromFile("EnemySpecial.png")) {
+        if (!loadColoredTexture(m_enemySpecialTex, sf::Color(255, 220, 80), 44, 44)) {
+            std::cerr << "Error: no se pudo crear textura de enemigo especial\n";
+        }
+    }
+    if (!m_enemyBossTex.loadFromFile("EnemyBoss.png")) {
+        if (!loadColoredTexture(m_enemyBossTex, sf::Color(180, 50, 255), 72, 72)) {
+            std::cerr << "Error: no se pudo crear textura de jefe\n";
+        }
     }
 
     sf::Image bulletImg;
-    bulletImg.create(4, 4, sf::Color::Yellow);
+    bulletImg.create(6, 6, sf::Color::Yellow);
     if (!m_bulletTex.loadFromImage(bulletImg)) {
         std::cerr << "Error: no se pudo crear textura de bala\n";
     }
 
     sf::Image powerUpImg;
-    powerUpImg.create(12, 12, sf::Color::White);
+    powerUpImg.create(14, 14, sf::Color::White);
     if (!m_powerUpTex.loadFromImage(powerUpImg)) {
         std::cerr << "Error: no se pudo crear textura de power-up\n";
     }
@@ -53,54 +82,91 @@ Match::Match()
 
 void Match::spawnBoss() {
     m_enemies.clear();
+    m_waveEnemyCount = 1;
 
-    Enemy boss(m_enemyTex, m_bulletTex, sf::Vector2f(400.f, 80.f));
+    Enemy boss(m_enemyBossTex, m_bulletTex, sf::Vector2f(400.f, 80.f));
     boss.configureAsBoss(m_level);
+    boss.setScoreValue(1200 + m_level * 80);
     m_enemies.push_back(std::move(boss));
 }
 
 void Match::spawnNormalWave(int waveIndex) {
     m_enemies.clear();
 
-    const float baseY = 60.f + waveIndex * 30.f;
-    const float speedY = 25.f + m_level * 5.f + waveIndex * 5.f;
+    const float baseY = 60.f + waveIndex * 45.f;
+    const float speedY = 18.f + m_level * 6.f + waveIndex * 3.f;
+    const int minCount = 4 + waveIndex * 3 + (m_level - 1) * 2;
+    const int maxCount = minCount + 4 + waveIndex + (m_level - 1);
+    const int enemyCount = (waveIndex == WAVES_PER_LEVEL - 2)
+        ? maxCount
+        : std::uniform_int_distribution<int>(minCount, maxCount)(m_rng);
+    m_waveEnemyCount = enemyCount;
+    m_highestNormalWaveCount = std::max(m_highestNormalWaveCount, enemyCount);
 
-    auto addEnemy = [&](float x, float y, Enemy::PatternType pattern,
-                        float cooldown, float bulletSpeed, int hp) {
-        m_enemies.emplace_back(m_enemyTex, m_bulletTex, sf::Vector2f(x, y));
+    std::uniform_int_distribution<int> typeRoll(0, 99);
+    std::uniform_real_distribution<float> xDist(80.f, 720.f);
+
+    auto addEnemy = [&](float x, float y, const sf::Texture& tex, Enemy::PatternType pattern,
+                        float cooldown, float bulletSpeed, int hp, int scoreValue,
+                        const sf::Color& color, int fanCount = 5, int circularCount = 12) {
+        m_enemies.emplace_back(tex, m_bulletTex, sf::Vector2f(x, y));
         Enemy& e = m_enemies.back();
-        e.setColor(sf::Color(255, 100, 100));
+        e.setColor(color);
         e.setRotation(180.f);
-        e.setScale(sf::Vector2f(0.8f, 0.8f));
+        e.setScale(sf::Vector2f(0.85f, 0.85f));
         e.setVelocity(sf::Vector2f(0.f, speedY));
         e.setPattern(pattern);
         e.setShootCooldown(cooldown);
         e.setBulletSpeed(bulletSpeed);
         e.setHP(hp);
-        e.setAmplitude(30.f + waveIndex * 10.f);
+        e.setScoreValue(scoreValue);
+        e.setAmplitude(24.f + waveIndex * 8.f);
+        e.setFanCount(fanCount);
+        e.setCircularCount(circularCount);
     };
 
-    switch (waveIndex) {
-        case 0:
-            for (int i = 0; i < 5; ++i) {
-                addEnemy(120.f + i * 140.f, baseY,
-                         Enemy::PatternType::Single, 1.8f, 180.f, 1);
+    for (int i = 0; i < enemyCount; ++i) {
+        float x = xDist(m_rng);
+        float y = baseY + (i / 8) * 40.f;
+        int roll = typeRoll(m_rng);
+
+        if (waveIndex == 0) {
+            if (roll < 70) {
+                addEnemy(x, y, m_enemyEasyTex, Enemy::PatternType::Single, 2.0f, 160.f, 1, 100,
+                         sf::Color(255, 180, 180), 4, 10);
+            } else {
+                addEnemy(x, y, m_enemyHardTex, Enemy::PatternType::Fan, 1.8f, 180.f, 2, 180,
+                         sf::Color(255, 160, 255), 5, 10);
             }
-            break;
-        case 1:
-            for (int row = 0; row < 2; ++row) {
-                for (int col = 0; col < 4; ++col) {
-                    addEnemy(100.f + col * 160.f, baseY + row * 50.f,
-                             Enemy::PatternType::Fan, 1.4f, 200.f, 1);
-                }
+        } else if (waveIndex == 1) {
+            if (roll < 45) {
+                addEnemy(x, y, m_enemyEasyTex, Enemy::PatternType::Single, 1.8f, 170.f, 1, 120,
+                         sf::Color(255, 170, 170), 4, 10);
+            } else if (roll < 80) {
+                addEnemy(x, y, m_enemyHardTex, Enemy::PatternType::Fan, 1.5f, 190.f, 3, 240,
+                         sf::Color(220, 160, 255), 6, 12);
+            } else {
+                const Enemy::PatternType specialPattern = (typeRoll(m_rng) % 2 == 0)
+                    ? Enemy::PatternType::Circular
+                    : Enemy::PatternType::Spiral;
+                addEnemy(x, y, m_enemySpecialTex, specialPattern, 1.6f, 180.f, 2, 300,
+                         sf::Color(255, 210, 120), 5, 12);
             }
-            break;
-        default:
-            for (int i = 0; i < 3; ++i) {
-                addEnemy(200.f + i * 200.f, baseY,
-                         Enemy::PatternType::Circular, 2.f, 170.f, 2);
+        } else {
+            if (roll < 30) {
+                addEnemy(x, y, m_enemyEasyTex, Enemy::PatternType::Single, 1.7f, 170.f, 1, 140,
+                         sf::Color(255, 150, 150), 4, 10);
+            } else if (roll < 70) {
+                addEnemy(x, y, m_enemyHardTex, Enemy::PatternType::Fan, 1.4f, 200.f, 3, 280,
+                         sf::Color(220, 140, 255), 7, 14);
+            } else {
+                const Enemy::PatternType specialPattern = (typeRoll(m_rng) % 3 == 0)
+                    ? Enemy::PatternType::Circular
+                    : Enemy::PatternType::Spiral;
+                addEnemy(x, y, m_enemySpecialTex, specialPattern, 1.3f, 210.f, 2, 340,
+                         sf::Color(255, 220, 130), 8, 14);
             }
-            break;
+        }
     }
 }
 
@@ -119,7 +185,8 @@ void Match::spawnWave() {
             oss << "JEFE - Nivel " << m_level;
         } else {
             oss << "Oleada " << (m_waveInLevel + 1) << " / " << WAVES_PER_LEVEL
-                << "  -  Nivel " << m_level;
+                << "  -  Nivel " << m_level
+                << "  -  Enemigos: " << m_waveEnemyCount;
         }
         m_waveText.setString(oss.str());
         const sf::FloatRect bounds = m_waveText.getLocalBounds();
@@ -167,8 +234,9 @@ void Match::checkCollisions() {
                     if (enemy.getHP() <= 0) {
                         const sf::Vector2f deathPos = enemy.getPosition();
                         const bool wasBoss = enemy.isBoss();
+                        const int enemyScore = enemy.getScoreValue();
                         enemy.destroy();
-                        m_score += wasBoss ? 1000 : 100;
+                        m_score += enemyScore;
                         tryDropPowerUp(deathPos, wasBoss);
                     }
                     break;
@@ -198,13 +266,15 @@ void Match::resetMatch() {
     m_score = 0;
     m_level = 1;
     m_waveInLevel = 0;
+    m_waveEnemyCount = 0;
+    m_highestNormalWaveCount = 0;
     m_gameOver = false;
     m_waitingForNextWave = false;
     m_waveTransitionTimer = 0.f;
     m_bullets.clear();
     m_enemies.clear();
     m_powerUps.clear();
-	m_player.reset(new Player(m_playerTex, sf::Vector2f(400.f, 520.f)));
+    m_player.reset(new Player(m_playerTex, sf::Vector2f(400.f, 520.f)));
     spawnWave();
 }
 
@@ -282,7 +352,8 @@ void Match::drawHud(sf::RenderWindow& window) {
     oss << "Puntos: " << m_score
         << "   Vidas: " << m_player->getLives()
         << "   Nivel: " << m_level
-        << "   Oleada: " << (m_waveInLevel + 1) << "/" << WAVES_PER_LEVEL;
+        << "   Oleada: " << (m_waveInLevel + 1) << "/" << WAVES_PER_LEVEL
+        << "   Enemigos: " << m_waveEnemyCount;
     m_hudText.setString(oss.str());
     window.draw(m_hudText);
 

@@ -14,7 +14,7 @@ public:
     void draw(sf::RenderWindow& window) override;
     void handleEvent(const sf::Event& event, Game& game) override;
     void onEnter(Game& game) override {
-        game.playmusic("menu_music.ogg", m_music, true);
+        game.playmusic("menu_music.ogg", game.getmusicvolume(), true);
     }
 private:
     sf::Font m_font;
@@ -26,4 +26,8 @@ private:
     sf::Text m_hudSizeText;
     bool m_fontLoaded = false;
     int m_selectedOption = 0;
+    int m_masterVolume = 100;
+    int m_musicVolume = 100;
+    int m_sfxVolume = 100;
+    int m_hudSize = 50;
 };

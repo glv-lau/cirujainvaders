@@ -1,14 +1,13 @@
 #include "SceneMatch.h"
+#include "../Game.h"
+#include <SFML/Window/Keyboard.hpp>
 
 SceneMatch::SceneMatch() {
-    // Acá podés inicializar música de fondo, cargar el mapa, etc.
     if (!m_font.loadFromFile("arial.ttf"))
     {
         return;
     }
-    void SceneMenu::onEnter(Game& game) {
-        game.playmusic("match_music.ogg", game.getmusicvolume(), true);
-    }
+
     m_fontLoaded = true;
 
     m_lvltext.setFont(m_font);
@@ -34,4 +33,16 @@ SceneMatch::SceneMatch() {
     m_powerupText.setString("Power-Up: Ninguno");
     m_powerupText.setFillColor(sf::Color::White);
     m_powerupText.setPosition(240.f, 380.f);
+}
+
+void SceneMatch::handleEvent(const sf::Event& event, Game& game) {
+    m_match.handleEvent(event, game);
+}
+
+void SceneMatch::update(float dt, Game& game) {
+    m_match.update(dt, game);
+}
+
+void SceneMatch::draw(sf::RenderWindow& window) {
+    m_match.draw(window);
 }

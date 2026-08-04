@@ -10,8 +10,6 @@
 #include <SFML/Graphics/Text.hpp>
 #include <memory>
 #include <random>
-#include <memory>
-#include "Entities/Player.h"
 #include <vector>
 
 
@@ -29,7 +27,10 @@ private:
     static constexpr float WAVE_DELAY = 2.5f;
 
     sf::Texture m_playerTex;
-    sf::Texture m_enemyTex;
+    sf::Texture m_enemyEasyTex;
+    sf::Texture m_enemyHardTex;
+    sf::Texture m_enemySpecialTex;
+    sf::Texture m_enemyBossTex;
     sf::Texture m_bulletTex;
     sf::Texture m_powerUpTex;
 
@@ -51,7 +52,8 @@ private:
     bool m_waitingForNextWave = false;
     float m_waveTransitionTimer = 0.f;
     bool m_gameOver = false;
-
+    int m_waveEnemyCount = 0;
+    int m_highestNormalWaveCount = 0;
 
 
     void spawnWave();

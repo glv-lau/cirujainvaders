@@ -1,11 +1,9 @@
 #pragma once
 #include "Entity.h"
+#include "Bullet.h"
 #include <memory>
 #include <vector>
 #include <cmath>
-
-// forward
-class Bullet;
 
 /*
  * Enemy - enemigo con HP y capacidad de disparar patrones.
@@ -16,7 +14,7 @@ class Bullet;
  */
 class Enemy : public Entity {
 public:
-    enum class PatternType { Single, Fan, Circular, Spiral };
+    using PatternType = Bullet::PatternType;
 
     Enemy(const sf::Texture& tex, const sf::Texture& bulletTex, const sf::Vector2f& pos);
 
@@ -36,6 +34,8 @@ public:
     void setFanCount(int c) { m_fanCount = c; }
     void setBulletSpeed(float s) { m_bulletSpeed = s; }
     void setSpiralSpeed(float degPerSec) { m_spiralDegPerSec = degPerSec; };
+    void setScoreValue(int score) { m_scoreValue = score; }
+    int getScoreValue() const { return m_scoreValue; }
 
     // Simple movement setters
     void setVelocity(const sf::Vector2f& v) { m_velocity = v; }
@@ -48,6 +48,7 @@ private:
     const sf::Texture *m_bulletTexture;
 
     int m_hp = 1;
+    int m_scoreValue = 100;
 
     // shooting
     float m_shootCooldown = 1.2f;

@@ -3,6 +3,13 @@
 
 class Bullet : public Entity {
 public:
+    enum class PatternType {
+        Single,
+        Fan,
+        Circular,
+        Spiral
+    };
+
     Bullet(const sf::Texture& tex, const sf::Vector2f& pos, const sf::Vector2f& vel, bool fromPlayer = false);
 
     void update(float dt) override;
