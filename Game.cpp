@@ -1,7 +1,7 @@
 #include <iostream>
 #include "Game.h"
 #include <SFML/Window/Event.hpp>
-
+#include "TextureManager.h"
 using namespace sf;
 
 Game::Game (Scene * e)
@@ -38,3 +38,8 @@ Game::~Game(){
 void Game::SetScene (Scene * new_scene){
     m_prox= new_scene;
 }
+TextureManager textures;
+textures.loadTexture("player", "resources/player.png");
+textures.loadTexture("enemy", "resources/Enemy.png");
+textures.loadTexture("bullet", "resources/Player bullet.png");
+textures.loadTexture("enemy_bullet", "resources/Enemy bullet.png");
