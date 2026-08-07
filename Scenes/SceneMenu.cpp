@@ -1,9 +1,13 @@
 #include "SceneMenu.h"
 #include "../Game.h"
+#include "../AssetManager.h"
+#include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Window/Keyboard.hpp>
 
 SceneMenu::SceneMenu()
 {
+    (void)AssetManager::instance().getTexture("menu_bg.png", sf::Color(40, 40, 40), 800, 600);
+
     if (!m_font.loadFromFile("arial.ttf")) {
         return;
     }
@@ -43,6 +47,11 @@ void SceneMenu::update(float dt, Game& game) {
 
 void SceneMenu::draw(sf::RenderWindow& window) {
     if (!m_fontLoaded) return;
+
+    static sf::RectangleShape background(sf::Vector2f(800.f, 600.f));
+    background.setFillColor(sf::Color(35, 35, 45));
+    background.setPosition(0.f, 0.f);
+    window.draw(background);
 
     window.draw(m_title);
     window.draw(m_startText);

@@ -17,6 +17,8 @@ public:
     using PatternType = Bullet::PatternType;
 
     Enemy(const sf::Texture& tex, const sf::Texture& bulletTex, const sf::Vector2f& pos);
+    Enemy(const std::string& assetName, const sf::Texture& bulletTex, const sf::Vector2f& pos,
+          const sf::Color& fallbackColor, unsigned int width, unsigned int height);
 
     virtual ~Enemy() = default;
 

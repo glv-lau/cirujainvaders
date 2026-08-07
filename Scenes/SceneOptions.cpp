@@ -1,11 +1,15 @@
 #include "SceneOptions.h"
 #include "SceneMenu.h"
 #include "../Game.h"
+#include "../AssetManager.h"
+#include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Window/Keyboard.hpp>
 #include <algorithm>
 
 SceneOptions::SceneOptions()
 {
+    (void)AssetManager::instance().getTexture("hud.png", sf::Color(70, 70, 70), 800, 120);
+
     if (!m_font.loadFromFile("arial.ttf"))
     {
         return;
@@ -148,6 +152,11 @@ void SceneOptions::draw(sf::RenderWindow &window)
 {
     if (!m_fontLoaded)
         return;
+
+    static sf::RectangleShape panel(sf::Vector2f(760.f, 420.f));
+    panel.setFillColor(sf::Color(45, 45, 55));
+    panel.setPosition(20.f, 100.f);
+    window.draw(panel);
 
     window.draw(m_title);
     window.draw(m_masterText);

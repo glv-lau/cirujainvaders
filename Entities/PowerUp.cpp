@@ -18,6 +18,23 @@ PowerUp::PowerUp(Type type, const Texture& tex, const Vector2f& pos)
     }
 }
 
+PowerUp::PowerUp(Type type, const Vector2f& pos)
+    : m_type(type)
+{
+    const std::string assetName = "powerup.png";
+    const sf::Color fallbackColor = sf::Color(180, 180, 255);
+    setTexture(assetName, fallbackColor, 14, 14, true);
+    setPosition(pos);
+    setVelocity(Vector2f(0.f, m_speed));
+
+    switch (type) {
+        case Type::ExtraLife:     setColor(Color(255, 80, 80));   break;
+        case Type::RapidFire:     setColor(Color(255, 200, 50));  break;
+        case Type::SpreadShot:    setColor(Color(80, 200, 255));  break;
+        case Type::Shield:        setColor(Color(100, 255, 100)); break;
+    }
+}
+
 void PowerUp::update(float dt) {
     Entity::update(dt);
 

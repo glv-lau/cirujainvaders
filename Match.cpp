@@ -1,61 +1,22 @@
 #include "Match.h"
 #include "Game.h"
+#include "AssetManager.h"
 #include <SFML/Graphics/Image.hpp>
 #include <SFML/Window/Keyboard.hpp>
 #include <algorithm>
 #include <iostream>
 #include <sstream>
 
-static bool loadColoredTexture(sf::Texture& texture, const sf::Color& color,
-    unsigned int width = 40u, unsigned int height = 40u)
-{
-    sf::Image img;
-    img.create(width, height, color);
-    return texture.loadFromImage(img);
-}
-
 Match::Match()
     : m_rng(std::random_device{}())
 {
-    if (!m_playerTex.loadFromFile("Nave.png")) {
-        std::cerr << "Error: no se pudo cargar Nave.png\n";
-        if (!loadColoredTexture(m_playerTex, sf::Color(80, 180, 255), 48, 48)) {
-            std::cerr << "Error: no se pudo crear textura del jugador\n";
-        }
-    }
-
-    if (!m_enemyEasyTex.loadFromFile("EnemyEasy.png")) {
-        if (!loadColoredTexture(m_enemyEasyTex, sf::Color(255, 120, 120), 40, 40)) {
-            std::cerr << "Error: no se pudo crear textura de enemigo facil\n";
-        }
-    }
-    if (!m_enemyHardTex.loadFromFile("EnemyHard.png")) {
-        if (!loadColoredTexture(m_enemyHardTex, sf::Color(220, 80, 220), 42, 42)) {
-            std::cerr << "Error: no se pudo crear textura de enemigo duro\n";
-        }
-    }
-    if (!m_enemySpecialTex.loadFromFile("EnemySpecial.png")) {
-        if (!loadColoredTexture(m_enemySpecialTex, sf::Color(255, 220, 80), 44, 44)) {
-            std::cerr << "Error: no se pudo crear textura de enemigo especial\n";
-        }
-    }
-    if (!m_enemyBossTex.loadFromFile("EnemyBoss.png")) {
-        if (!loadColoredTexture(m_enemyBossTex, sf::Color(180, 50, 255), 72, 72)) {
-            std::cerr << "Error: no se pudo crear textura de jefe\n";
-        }
-    }
-
-    sf::Image bulletImg;
-    bulletImg.create(6, 6, sf::Color::Yellow);
-    if (!m_bulletTex.loadFromImage(bulletImg)) {
-        std::cerr << "Error: no se pudo crear textura de bala\n";
-    }
-
-    sf::Image powerUpImg;
-    powerUpImg.create(14, 14, sf::Color::White);
-    if (!m_powerUpTex.loadFromImage(powerUpImg)) {
-        std::cerr << "Error: no se pudo crear textura de power-up\n";
-    }
+    m_playerTex = AssetManager::instance().getTexture("player.png", sf::Color(80, 180, 255), 48, 48);
+    m_enemyEasyTex = AssetManager::instance().getTexture("enemy_basic.png", sf::Color(255, 120, 120), 40, 40);
+    m_enemyHardTex = AssetManager::instance().getTexture("enemy_hard.png", sf::Color(220, 80, 220), 42, 42);
+    m_enemySpecialTex = AssetManager::instance().getTexture("enemy_special.png", sf::Color(255, 220, 80), 44, 44);
+    m_enemyBossTex = AssetManager::instance().getTexture("enemy_boss.png", sf::Color(180, 50, 255), 72, 72);
+    m_bulletTex = AssetManager::instance().getTexture("bullet_player.png", sf::Color(255, 255, 80), 6, 6);
+    m_powerUpTex = AssetManager::instance().getTexture("powerup.png", sf::Color(180, 180, 255), 14, 14);
 
     if (m_font.loadFromFile("arial.ttf")) {
         m_fontLoaded = true;

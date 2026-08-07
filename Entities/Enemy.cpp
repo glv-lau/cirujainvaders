@@ -14,6 +14,13 @@ Enemy::Enemy(const Texture& tex, const Texture& bulletTex, const Vector2f& pos)
     setPosition(pos);
 }
 
+Enemy::Enemy(const std::string& assetName, const Texture& bulletTex, const Vector2f& pos, const Color& fallbackColor, unsigned int width, unsigned int height)
+    : m_bulletTexture(&bulletTex)
+{
+    setTexture(assetName, fallbackColor, width, height, true);
+    setPosition(pos);
+}
+
 void Enemy::update(float dt) {
     // ejemplo: movimiento vertical por velocity + sin en x según m_timeAlive
     m_timeAlive += dt;

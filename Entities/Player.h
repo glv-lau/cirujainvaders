@@ -8,6 +8,7 @@ class Bullet;
 class Player : public Entity {
 public:
     Player(const sf::Texture& tex, const sf::Vector2f& pos);
+    explicit Player(const sf::Vector2f& pos);
 
     void update(float dt) override;
     void draw(sf::RenderWindow& win) const;;

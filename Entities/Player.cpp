@@ -11,6 +11,12 @@ Player::Player(const Texture& tex, const Vector2f& pos) {
     setRotation(0.f);
 }
 
+Player::Player(const Vector2f& pos) {
+    setTexture("player.png", sf::Color(80, 180, 255), 48, 48);
+    setPosition(pos);
+    setRotation(0.f);
+}
+
 float Player::getEffectiveCooldown() const {
     return (m_rapidFireTimer > 0.f) ? 0.08f : m_shootCooldown;
 }

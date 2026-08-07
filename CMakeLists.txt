@@ -10,6 +10,7 @@ add_executable(CirujaInvaders
     Main.cpp
     Game.cpp
     Match.cpp
+    AssetManager.cpp
     Scenes/Scene.cpp
     Scenes/SceneMenu.cpp
     Scenes/Button.cpp

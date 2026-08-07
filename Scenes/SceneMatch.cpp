@@ -1,5 +1,7 @@
 #include "SceneMatch.h"
 #include "../Game.h"
+#include "../AssetManager.h"
+#include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Window/Keyboard.hpp>
 
 SceneMatch::SceneMatch() {
@@ -44,5 +46,10 @@ void SceneMatch::update(float dt, Game& game) {
 }
 
 void SceneMatch::draw(sf::RenderWindow& window) {
+    static sf::RectangleShape background(sf::Vector2f(800.f, 600.f));
+    background.setFillColor(sf::Color(15, 15, 20));
+    background.setPosition(0.f, 0.f);
+    window.draw(background);
+
     m_match.draw(window);
 }

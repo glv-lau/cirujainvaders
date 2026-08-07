@@ -1,4 +1,5 @@
 #include "Entity.h"
+#include "../AssetManager.h"
 #include <algorithm>
 #include <cmath>
 
@@ -73,6 +74,15 @@ void Entity::setTexture(const Texture& tex, bool resetOriginToCenter) {
     if (!m_hasCustomHitbox) {
         resetHitboxToSprite();
     }
+}
+
+void Entity::setTexture(const std::string& assetName,
+                        const Color& fallbackColor,
+                        unsigned int width,
+                        unsigned int height,
+                        bool resetOriginToCenter) {
+    const Texture& tex = AssetManager::instance().getTexture(assetName, fallbackColor, width, height);
+    setTexture(tex, resetOriginToCenter);
 }
 
 void Entity::setTextureRect(const IntRect& rect) {

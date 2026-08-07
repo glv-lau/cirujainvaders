@@ -17,8 +17,10 @@ private:
     sf::Font m_font;
     sf::Text m_title;
     sf::Text m_startText;
+    sf::Text m_optionsText;
     sf::Text m_exitText;
     bool m_fontLoaded = false;
+    int m_selectedOption = 0;
 };
 
 #endif

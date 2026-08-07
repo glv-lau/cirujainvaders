@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <string>
 
 /*
  * Entity - clase base para todos los objetos del juego.
@@ -46,6 +47,11 @@ public:
 
     // Texture / sprite helpers
     void setTexture(const sf::Texture& tex, bool resetOriginToCenter = true);
+    void setTexture(const std::string& assetName,
+                   const sf::Color& fallbackColor,
+                   unsigned int width,
+                   unsigned int height,
+                   bool resetOriginToCenter = true);
     void setTextureRect(const sf::IntRect& rect);
     void setOriginCenter(); // centra el origen en localBounds
     void setScale(const sf::Vector2f& s) { m_sprite.setScale(s); }
