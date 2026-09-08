@@ -10,6 +10,7 @@ add_executable(CirujaInvaders
     Main.cpp
     Game.cpp
     Match.cpp
+    FormationManager.cpp
     AssetManager.cpp
     AudioManager.cpp
     ScoreManager.cpp

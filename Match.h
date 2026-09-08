@@ -7,6 +7,7 @@
 #include "Entities/Bullet.h"
 #include "Entities/PowerUp.h"
 #include "ScoreManager.h"
+#include "FormationManager.h"
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <memory>
@@ -58,6 +59,7 @@ private:
     int m_waveEnemyCount = 0;
     int m_highestNormalWaveCount = 0;
     float m_bossSummonTimer = 0.f;
+    FormationManager m_formation;
 
 
     void spawnWave();

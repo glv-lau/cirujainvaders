@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <cmath>
+#include <random>
 
 /*
  * Enemy - enemigo con HP y capacidad de disparar patrones.
@@ -71,4 +72,22 @@ private:
     bool m_isBoss = false;
     sf::Vector2f m_targetPosition;
     bool m_hasTarget = false;
+    float m_bossPhase = 0.f;
+    float m_bossRetuneTimer = 0.f;
+    float m_bossAx = 300.f;
+    float m_bossAy = 180.f;
+    float m_bossW1 = 0.7f;
+    float m_bossW2 = 1.1f;
+    float m_bossPhaseX = 0.f;
+    float m_bossPhaseY = 0.f;
+    float m_bossTargetAx = 300.f;
+    float m_bossTargetAy = 180.f;
+    float m_bossTargetW1 = 0.7f;
+    float m_bossTargetW2 = 1.1f;
+    float m_bossTargetPhaseX = 0.f;
+    float m_bossTargetPhaseY = 0.f;
+    std::mt19937 m_bossRng;
+    unsigned int m_bossShotPattern = 0;
+
+    void retuneBossTrajectory();
 };

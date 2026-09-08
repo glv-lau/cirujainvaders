@@ -2,16 +2,31 @@
 
 #include <SFML/Audio.hpp>
 #include <iostream>
-
-#if defined(_WIN32)
-#include <Windows.h>
-#endif
+#include <vector>
 
 namespace {
     int clampVolume(int value) {
         if (value < 0) return 0;
         if (value > 100) return 100;
         return value;
+    }
+
+    std::vector<std::string> resourceCandidates(const std::string& fileName) {
+        std::vector<std::string> candidates;
+        candidates.push_back("Resources/" + fileName);
+        candidates.push_back("resources/" + fileName);
+        candidates.push_back(fileName);
+        return candidates;
+    }
+
+    bool loadBufferFromResources(sf::SoundBuffer& buffer, const std::string& fileName) {
+        const std::vector<std::string> candidates = resourceCandidates(fileName);
+        for (size_t i = 0; i < candidates.size(); ++i) {
+            if (buffer.loadFromFile(candidates[i])) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
@@ -22,9 +37,14 @@ AudioManager::AudioManager()
     , m_musicEnabled(true)
     , m_sfxEnabled(true)
     , m_lastTrack("")
+    , m_nextChannel(0)
 {
-    m_music.setVolume(static_cast<float>(m_musicVolume));
-    m_sfxSound.setVolume(static_cast<float>(m_sfxVolume));
+    for (int i = 0; i < 16; ++i) {
+        m_sfxPool.push_back(std::unique_ptr<sf::Sound>(new sf::Sound()));
+    }
+    m_sfxChannelFiles.resize(m_sfxPool.size());
+    preloadAssets();
+    updateVolumes();
 }
 
 AudioManager& AudioManager::instance() {
@@ -34,9 +54,7 @@ AudioManager& AudioManager::instance() {
 
 void AudioManager::setMasterVolume(int volume) {
     m_masterVolume = clampVolume(volume);
-    const float master = static_cast<float>(m_masterVolume);
-    m_music.setVolume((static_cast<float>(m_musicVolume) / 100.f) * master);
-    m_sfxSound.setVolume((static_cast<float>(m_sfxVolume) / 100.f) * master);
+    updateVolumes();
 }
 
 int AudioManager::getMasterVolume() const {
@@ -45,8 +63,7 @@ int AudioManager::getMasterVolume() const {
 
 void AudioManager::setMusicVolume(int volume) {
     m_musicVolume = clampVolume(volume);
-    const float master = static_cast<float>(m_masterVolume);
-    m_music.setVolume((static_cast<float>(m_musicVolume) / 100.f) * master);
+    updateVolumes();
 }
 
 int AudioManager::getMusicVolume() const {
@@ -55,8 +72,7 @@ int AudioManager::getMusicVolume() const {
 
 void AudioManager::setSfxVolume(int volume) {
     m_sfxVolume = clampVolume(volume);
-    const float master = static_cast<float>(m_masterVolume);
-    m_sfxSound.setVolume((static_cast<float>(m_sfxVolume) / 100.f) * master);
+    updateVolumes();
 }
 
 int AudioManager::getSfxVolume() const {
@@ -73,7 +89,9 @@ void AudioManager::setMusicEnabled(bool enabled) {
 void AudioManager::setSfxEnabled(bool enabled) {
     m_sfxEnabled = enabled;
     if (!m_sfxEnabled) {
-        m_sfxSound.stop();
+        for (size_t i = 0; i < m_sfxPool.size(); ++i) {
+            m_sfxPool[i]->stop();
+        }
     }
 }
 
@@ -90,17 +108,16 @@ void AudioManager::playMusic(const std::string& fileName, bool loop) {
         return;
     }
 
-    if (!m_music.openFromFile(fileName)) {
-        std::cerr << "Audio no encontrado: " << fileName << ". Usando fallback de sistema.\n";
-#if defined(_WIN32)
-        Beep(660, 80);
-#endif
+    const std::map<std::string, std::shared_ptr<sf::SoundBuffer> >::const_iterator it =
+        m_buffers.find(fileName);
+    if (it == m_buffers.end()) {
+        std::cerr << "Audio no precargado: " << fileName << ". Se omite.\n";
         m_lastTrack = fileName;
         return;
     }
 
+    m_music.setBuffer(*it->second);
     m_music.setLoop(loop);
-    m_music.setVolume((static_cast<float>(m_musicVolume) / 100.f) * static_cast<float>(m_masterVolume));
     m_music.play();
     m_lastTrack = fileName;
 }
@@ -110,15 +127,56 @@ void AudioManager::playSfx(const std::string& fileName) {
         return;
     }
 
-    if (!m_sfxBuffer.loadFromFile(fileName)) {
-        std::cerr << "SFX no encontrado: " << fileName << ". Fallback generado.\n";
-#if defined(_WIN32)
-        Beep(440, 50);
-#endif
+    const std::map<std::string, std::shared_ptr<sf::SoundBuffer> >::const_iterator it =
+        m_buffers.find(fileName);
+    if (it == m_buffers.end()) {
         return;
     }
 
-    m_sfxSound.setBuffer(m_sfxBuffer);
-    m_sfxSound.setVolume((static_cast<float>(m_sfxVolume) / 100.f) * static_cast<float>(m_masterVolume));
-    m_sfxSound.play();
+    sf::Sound& channel = *m_sfxPool[m_nextChannel];
+    const std::size_t channelIndex = m_nextChannel;
+    m_nextChannel = (m_nextChannel + 1) % m_sfxPool.size();
+    channel.setBuffer(*it->second);
+    m_sfxChannelFiles[channelIndex] = fileName;
+    const float masterSfx = (static_cast<float>(m_sfxVolume) / 100.f)
+        * static_cast<float>(m_masterVolume);
+    const float multiplier = (fileName == "collision.wav"
+        || fileName == "collision_en.wav") ? 0.5f : 1.f;
+    channel.setVolume(masterSfx * multiplier);
+    channel.play();
+}
+
+bool AudioManager::loadBuffer(const std::string& fileName,
+                              std::shared_ptr<sf::SoundBuffer>& buffer) {
+    buffer.reset(new sf::SoundBuffer());
+    if (!loadBufferFromResources(*buffer, fileName)) {
+        buffer.reset();
+        std::cerr << "Audio no encontrado durante la precarga: " << fileName << "\n";
+        return false;
+    }
+    m_buffers[fileName] = buffer;
+    return true;
+}
+
+void AudioManager::preloadAssets() {
+    const char* files[] = {
+        "shoot.wav", "collision.wav", "collision_en.wav", "selecting.wav",
+        "menu_music.ogg", "wave_music.ogg", "boss_music.ogg", "pause_music.ogg"
+    };
+    const size_t count = sizeof(files) / sizeof(files[0]);
+    for (size_t i = 0; i < count; ++i) {
+        std::shared_ptr<sf::SoundBuffer> buffer;
+        loadBuffer(files[i], buffer);
+    }
+}
+
+void AudioManager::updateVolumes() {
+    const float master = static_cast<float>(m_masterVolume);
+    m_music.setVolume((static_cast<float>(m_musicVolume) / 100.f) * master);
+    const float sfx = (static_cast<float>(m_sfxVolume) / 100.f) * master;
+    for (size_t i = 0; i < m_sfxPool.size(); ++i) {
+        const float multiplier = (m_sfxChannelFiles[i] == "collision.wav"
+            || m_sfxChannelFiles[i] == "collision_en.wav") ? 0.5f : 1.f;
+        m_sfxPool[i]->setVolume(sfx * multiplier);
+    }
 }

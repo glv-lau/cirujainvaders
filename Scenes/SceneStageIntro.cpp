@@ -56,7 +56,9 @@ void SceneStageIntro::update(float dt, Game& game) {
 }
 
 void SceneStageIntro::draw(sf::RenderWindow& window) {
-    static sf::RectangleShape background(sf::Vector2f(800.f, 600.f));
+    const sf::Vector2u windowSize = window.getSize();
+    sf::RectangleShape background(sf::Vector2f(static_cast<float>(windowSize.x),
+                                               static_cast<float>(windowSize.y)));
     background.setFillColor(sf::Color(15, 15, 20));
     background.setPosition(0.f, 0.f);
     window.draw(background);

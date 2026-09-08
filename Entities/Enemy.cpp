@@ -9,41 +9,58 @@ static constexpr float PI_F = 3.14159265358979323846f;
 
 Enemy::Enemy(const Texture& tex, const Texture& bulletTex, const Vector2f& pos)
     : m_bulletTexture(&bulletTex)
+    , m_bossRng(std::random_device{}())
 {
-    setTexture(tex, true);
+    setTextureToSize(tex, 64.f, 64.f, true);
+    setHitboxLocal(FloatRect(-28.f, -28.f, 56.f, 56.f));
     setPosition(pos);
 }
 
 Enemy::Enemy(const std::string& assetName, const Texture& bulletTex, const Vector2f& pos, const Color& fallbackColor, unsigned int width, unsigned int height)
     : m_bulletTexture(&bulletTex)
+    , m_bossRng(std::random_device{}())
 {
     setTexture(assetName, fallbackColor, width, height, true);
+    setHitboxLocal(FloatRect(-28.f, -28.f, 56.f, 56.f));
     setPosition(pos);
 }
 
 void Enemy::update(float dt) {
     m_timeAlive += dt;
 
-    if (m_hasTarget) {
-        const Vector2f dir = m_targetPosition - getPosition();
-        const float length = std::sqrt(dir.x * dir.x + dir.y * dir.y);
-        if (length > 0.0001f) {
-            float speed = std::sqrt(m_velocity.x * m_velocity.x + m_velocity.y * m_velocity.y);
-            if (speed < 1.f) {
-                speed = 85.f;
-            }
-            const Vector2f normDir = dir / length;
-            m_velocity = normDir * speed;
+    if (m_isBoss) {
+        m_bossRetuneTimer -= dt;
+        if (m_bossRetuneTimer <= 0.f) {
+            retuneBossTrajectory();
+            m_bossRetuneTimer = 4.5f;
         }
+        const float blend = std::min(1.f, dt * 0.45f);
+        m_bossAx += (m_bossTargetAx - m_bossAx) * blend;
+        m_bossAy += (m_bossTargetAy - m_bossAy) * blend;
+        m_bossW1 += (m_bossTargetW1 - m_bossW1) * blend;
+        m_bossW2 += (m_bossTargetW2 - m_bossW2) * blend;
+        m_bossPhaseX += (m_bossTargetPhaseX - m_bossPhaseX) * blend;
+        m_bossPhaseY += (m_bossTargetPhaseY - m_bossPhaseY) * blend;
+        const Vector2f world = Entity::getWorldBounds();
+        const float x = world.x * 0.5f
+            + m_bossAx * std::sin(m_bossW1 * m_timeAlive + m_bossPhaseX);
+        const float y = world.y * 0.18f + m_bossAy * 0.32f
+            * std::cos(m_bossW2 * m_timeAlive + m_bossPhaseY);
+        setPosition(Vector2f(std::max(72.f, std::min(world.x - 72.f, x)),
+                             std::max(75.f, std::min(world.y * 0.48f, y))));
     }
 
-    if ((m_velocity.x != 0.f) || (m_velocity.y != 0.f)) {
+    if (!m_isBoss && ((m_velocity.x != 0.f) || (m_velocity.y != 0.f))) {
         m_sprite.move(m_velocity * dt);
     }
 
     Vector2f p = getPosition();
-    p.x = std::max(26.f, std::min(774.f, p.x));
-    p.y = std::max(30.f, std::min(570.f, p.y));
+    const Vector2f bounds = Entity::getWorldBounds();
+    if (!m_isBoss && (p.x <= 80.f || p.x >= 720.f)) {
+        m_velocity.x = -m_velocity.x;
+    }
+    p.x = std::max(26.f, std::min(bounds.x - 26.f, p.x));
+    p.y = std::max(30.f, std::min(bounds.y - 30.f, p.y));
     setPosition(p);
 
     if (m_shootTimer > 0.f) m_shootTimer -= dt;
@@ -69,23 +86,54 @@ std::vector<std::unique_ptr<Bullet>> Enemy::shoot() {
     }
 
     if (m_isBoss) {
-        const int starCount = 12;
         const float baseAngle = m_spiralAngle;
-        for (int i = 0; i < starCount; ++i) {
-            const float angle = (360.f * i) / starCount + baseAngle;
-            const float r = angle * PI_F / 180.f;
-            const Vector2f vel(std::cos(r) * m_bulletSpeed, std::sin(r) * m_bulletSpeed);
-            out.push_back(std::make_unique<Bullet>(*m_bulletTexture, pos, vel));
+        const auto emit = [&](float angle, float speed) {
+            const float radians = angle * PI_F / 180.f;
+            out.push_back(std::make_unique<Bullet>(
+                *m_bulletTexture, pos,
+                Vector2f(std::cos(radians) * speed, std::sin(radians) * speed)));
+        };
+
+        switch (m_bossShotPattern % 4) {
+            case 0: { // Flor: petalos radiales con rotacion progresiva.
+                for (int petal = 0; petal < 8; ++petal) {
+                    for (int ring = 0; ring < 3; ++ring) {
+                        emit(baseAngle + petal * 45.f + ring * 8.f,
+                             m_bulletSpeed * (0.72f + ring * 0.12f));
+                    }
+                }
+                break;
+            }
+            case 1: { // Trisquel: tres brazos curvos entrelazados.
+                for (int arm = 0; arm < 3; ++arm) {
+                    for (int step = 0; step < 5; ++step) {
+                        emit(baseAngle + arm * 120.f + step * 13.f,
+                             m_bulletSpeed * (0.65f + step * 0.09f));
+                    }
+                }
+                break;
+            }
+            case 2: { // Estrella de cinco puntas: vertices y diagonales.
+                for (int point = 0; point < 7; ++point) {
+                    emit(baseAngle + point * (360.f / 7.f), m_bulletSpeed);
+                    emit(baseAngle + point * (360.f / 7.f) + 25.7f,
+                         m_bulletSpeed * 0.78f);
+                }
+                break;
+            }
+            case 3: { // Ondas: anillos alternados con velocidades diferentes.
+                for (int wave = 0; wave < 2; ++wave) {
+                    for (int i = 0; i < 16; ++i) {
+                        emit(baseAngle + i * 22.5f + wave * 11.25f,
+                             m_bulletSpeed * (0.62f + wave * 0.22f));
+                    }
+                }
+                break;
+            }
         }
 
-        for (int i = 0; i < 6; ++i) {
-            const float angle = (360.f * i) / 6.f + baseAngle * 1.7f;
-            const float r = angle * PI_F / 180.f;
-            const Vector2f vel(std::cos(r) * (m_bulletSpeed * 0.8f), std::sin(r) * (m_bulletSpeed * 0.8f));
-            out.push_back(std::make_unique<Bullet>(*m_bulletTexture, pos, vel));
-        }
-
-        m_spiralAngle += 38.f;
+        ++m_bossShotPattern;
+        m_spiralAngle += 18.f;
     } else {
         switch (m_pattern) {
             case PatternType::Single: {
@@ -139,7 +187,8 @@ std::vector<std::unique_ptr<Bullet>> Enemy::shoot() {
 void Enemy::configureAsBoss(int level) {
     m_isBoss = true;
     m_hp = 45 + level * 18;
-    setScale(Vector2f(2.2f, 2.2f));
+    fitToSize(200.f, 200.f);
+    setHitboxLocal(FloatRect(-86.f, -86.f, 172.f, 172.f));
     setColor(Color(124, 14, 54));
     setRotation(180.f);
     setPattern(PatternType::Spiral);
@@ -148,4 +197,22 @@ void Enemy::configureAsBoss(int level) {
     setSpiralSpeed(190.f);
     setVelocity(Vector2f(80.f, 20.f));
     setAmplitude(80.f);
+    m_bossPhase = 0.f;
+    m_bossRetuneTimer = 0.f;
+    retuneBossTrajectory();
+}
+
+void Enemy::retuneBossTrajectory() {
+    std::uniform_real_distribution<float> amplitudeX(240.f, 330.f);
+    std::uniform_real_distribution<float> amplitudeY(155.f, 220.f);
+    // Frecuencias más bajas: el jefe conserva su recorrido amplio, pero no
+    // cambia de dirección ni atraviesa la pantalla de forma demasiado rápida.
+    std::uniform_real_distribution<float> frequency(0.22f, 0.62f);
+    std::uniform_real_distribution<float> phase(0.f, 6.28318530718f);
+    m_bossTargetAx = amplitudeX(m_bossRng);
+    m_bossTargetAy = amplitudeY(m_bossRng);
+    m_bossTargetW1 = frequency(m_bossRng);
+    m_bossTargetW2 = frequency(m_bossRng);
+    m_bossTargetPhaseX = phase(m_bossRng);
+    m_bossTargetPhaseY = phase(m_bossRng);
 }

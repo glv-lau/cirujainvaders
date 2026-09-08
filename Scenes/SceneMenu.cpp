@@ -5,6 +5,7 @@
 #include "SceneInitials.h"
 #include "SceneOptions.h"
 #include "../Match.h"
+#include "../AudioManager.h"
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Window/Mouse.hpp>
@@ -36,6 +37,7 @@ namespace {
 
 SceneMenu::SceneMenu()
 {
+    AudioManager::instance().playMusic("menu_music.ogg", true);
     (void)AssetManager::instance().getTexture("menu_bg.png", sf::Color(40, 40, 40), 800, 600);
 
     if (!loadFontFallback(m_font)) {
@@ -90,7 +92,7 @@ void SceneMenu::activateSelection(Game& game) {
     if (game.hasContinueAvailable()) {
         switch (m_selectedOption) {
             case 0:
-                game.setContinueAvailable(true);
+                game.setContinueAvailable(false);
                 game.setScene(new SceneInitials());
                 break;
             case 1:
@@ -108,7 +110,7 @@ void SceneMenu::activateSelection(Game& game) {
     } else {
         switch (m_selectedOption) {
             case 0:
-                game.setContinueAvailable(true);
+                game.setContinueAvailable(false);
                 game.setScene(new SceneInitials());
                 break;
             case 1:
@@ -142,8 +144,10 @@ void SceneMenu::handleEvent(const sf::Event& event, Game& game) {
         const int optionCount = getOptionCount(game);
         if (event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::W) {
             m_selectedOption = (m_selectedOption + optionCount - 1) % optionCount;
+            AudioManager::instance().playSfx("selecting.wav");
         } else if (event.key.code == sf::Keyboard::Down || event.key.code == sf::Keyboard::S) {
             m_selectedOption = (m_selectedOption + 1) % optionCount;
+            AudioManager::instance().playSfx("selecting.wav");
         } else if (event.key.code == sf::Keyboard::Return || event.key.code == sf::Keyboard::Space) {
             activateSelection(game);
         } else if (event.key.code == sf::Keyboard::Escape) {
@@ -196,7 +200,9 @@ void SceneMenu::update(float dt, Game& game) {
 void SceneMenu::draw(sf::RenderWindow& window) {
     if (!m_fontLoaded) return;
 
-    static sf::RectangleShape background(sf::Vector2f(800.f, 600.f));
+    const sf::Vector2u windowSize = window.getSize();
+    sf::RectangleShape background(sf::Vector2f(static_cast<float>(windowSize.x),
+                                               static_cast<float>(windowSize.y)));
     background.setFillColor(sf::Color(5, 12, 22));
     background.setPosition(0.f, 0.f);
     window.draw(background);

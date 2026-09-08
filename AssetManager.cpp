@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics/Image.hpp>
 #include <iostream>
+#include <vector>
 
 namespace {
 
@@ -33,7 +34,15 @@ const sf::Texture& AssetManager::getTexture(const std::string& assetName,
     }
 
     TextureEntry entry;
-    const bool loaded = entry.texture.loadFromFile(assetName);
+    const std::vector<std::string> candidates = {
+        "Resources/" + assetName,
+        "resources/" + assetName,
+        assetName
+    };
+    bool loaded = false;
+    for (size_t i = 0; i < candidates.size() && !loaded; ++i) {
+        loaded = entry.texture.loadFromFile(candidates[i]);
+    }
     if (!loaded) {
         std::cerr << "Advertencia: textura no encontrada: " << assetName
                   << ". Se usará fallback visual.\n";

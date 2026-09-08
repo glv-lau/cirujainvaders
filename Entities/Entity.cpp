@@ -5,6 +5,18 @@
 
 using namespace sf;
 
+namespace {
+    Vector2f g_worldBounds(800.f, 600.f);
+}
+
+void Entity::setWorldBounds(float width, float height) {
+    g_worldBounds = Vector2f(std::max(1.f, width), std::max(1.f, height));
+}
+
+Vector2f Entity::getWorldBounds() {
+    return g_worldBounds;
+}
+
 void Entity::update(float dt) {
     // Comportamiento por defecto: mover según m_velocity (subclases pueden hacer override y llamar a Entity::update(dt))
     if ((m_velocity.x != 0.f) || (m_velocity.y != 0.f)) {
@@ -76,13 +88,28 @@ void Entity::setTexture(const Texture& tex, bool resetOriginToCenter) {
     }
 }
 
+void Entity::setTextureToSize(const Texture& tex, float width, float height,
+                              bool resetOriginToCenter) {
+    setTexture(tex, resetOriginToCenter);
+    fitToSize(width, height);
+}
+
+void Entity::fitToSize(float width, float height) {
+    const FloatRect bounds = m_sprite.getLocalBounds();
+    if (bounds.width > 0.f && bounds.height > 0.f) {
+        const float scale = std::min(width / bounds.width, height / bounds.height);
+        m_sprite.setScale(scale, scale);
+    }
+}
+
 void Entity::setTexture(const std::string& assetName,
                         const Color& fallbackColor,
                         unsigned int width,
                         unsigned int height,
                         bool resetOriginToCenter) {
     const Texture& tex = AssetManager::instance().getTexture(assetName, fallbackColor, width, height);
-    setTexture(tex, resetOriginToCenter);
+    setTextureToSize(tex, static_cast<float>(width), static_cast<float>(height),
+                     resetOriginToCenter);
 }
 
 void Entity::setTextureRect(const IntRect& rect) {

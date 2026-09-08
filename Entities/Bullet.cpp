@@ -5,7 +5,13 @@ using namespace sf;
 Bullet::Bullet(const Texture& tex, const Vector2f& pos, const Vector2f& vel, bool fromPlayer)
     : m_fromPlayer(fromPlayer)
 {
-    setTexture(tex, true);
+    const float width = fromPlayer ? 12.f : 10.f;
+    const float height = fromPlayer ? 26.f : 10.f;
+    setTextureToSize(tex, width, height, true);
+    setHitboxLocal(sf::FloatRect(-width * 0.5f, -height * 0.5f, width, height));
+    if (fromPlayer) {
+        setColor(Color(120, 235, 255));
+    }
     setPosition(pos);
     setVelocity(vel);
 }
@@ -15,6 +21,10 @@ Bullet::Bullet(const std::string& assetName, const Vector2f& pos, const Vector2f
     : m_fromPlayer(fromPlayer)
 {
     setTexture(assetName, fallbackColor, width, height, true);
+    setHitboxLocal(sf::FloatRect(-static_cast<float>(width) * 0.5f,
+                                 -static_cast<float>(height) * 0.5f,
+                                 static_cast<float>(width),
+                                 static_cast<float>(height)));
     setPosition(pos);
     setVelocity(vel);
 }
@@ -23,7 +33,9 @@ void Bullet::update(float dt) {
     Entity::update(dt);
 
     const Vector2f p = getPosition();
-    if (p.x < -100.f || p.x > 900.f || p.y < -100.f || p.y > 700.f) {
+    const Vector2f bounds = Entity::getWorldBounds();
+    if (p.x < -100.f || p.x > bounds.x + 100.f
+        || p.y < -100.f || p.y > bounds.y + 100.f) {
         destroy();
     }
 }

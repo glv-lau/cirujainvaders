@@ -32,7 +32,8 @@ namespace {
         return false;
     }
 
-    bool readSavedStateFromDisk(int& score, int& level, int& wave, int& lives, std::string& initials) {
+    bool readSavedStateFromDisk(int& score, int& level, int& wave, int& lives,
+                                std::string& initials, sf::Vector2f& playerPosition) {
         std::ifstream input("partida_guardada.txt");
         if (!input.is_open()) {
             input.open("savegame.txt");
@@ -46,8 +47,12 @@ namespace {
         level = 1;
         wave = 0;
         lives = 3;
-        input >> initials >> score >> level >> wave >> lives;
-        return (!initials.empty() && input.good());
+        if (!(input >> initials >> score >> level >> wave >> lives)) {
+            return false;
+        }
+        playerPosition = sf::Vector2f(400.f, 520.f);
+        input >> playerPosition.x >> playerPosition.y;
+        return initials.size() == 3 && score >= 0 && level >= 1 && wave >= 0 && lives >= 1 && lives <= 5;
     }
 }
 
@@ -59,13 +64,13 @@ Match::Match()
 Match::Match(bool resumeFromSaveFile)
     : m_rng(std::random_device{}())
 {
-    m_playerTex = AssetManager::instance().getTexture("player.png", sf::Color(12, 183, 242), 48, 48);
-    m_enemyEasyTex = AssetManager::instance().getTexture("enemy_basic.png", sf::Color(248, 201, 77), 40, 40);
-    m_enemyHardTex = AssetManager::instance().getTexture("enemy_hard.png", sf::Color(216, 129, 57), 42, 42);
-    m_enemySpecialTex = AssetManager::instance().getTexture("enemy_special.png", sf::Color(186, 66, 40), 44, 44);
-    m_enemyBossTex = AssetManager::instance().getTexture("enemy_boss.png", sf::Color(124, 14, 54), 72, 72);
-    m_bulletTex = AssetManager::instance().getTexture("bullet_player.png", sf::Color(124, 218, 249), 6, 6);
-    m_powerUpTex = AssetManager::instance().getTexture("powerup.png", sf::Color(182, 255, 255), 14, 14);
+    m_playerTex = AssetManager::instance().getTexture("player.png", sf::Color(12, 183, 242), 88, 88);
+    m_enemyEasyTex = AssetManager::instance().getTexture("enemy_basic.png", sf::Color(248, 201, 77), 64, 64);
+    m_enemyHardTex = AssetManager::instance().getTexture("enemy_hard.png", sf::Color(216, 129, 57), 64, 64);
+    m_enemySpecialTex = AssetManager::instance().getTexture("enemy_special.png", sf::Color(186, 66, 40), 64, 64);
+    m_enemyBossTex = AssetManager::instance().getTexture("enemy_boss.png", sf::Color(124, 14, 54), 200, 200);
+    m_bulletTex = AssetManager::instance().getTexture("bullet_player.png", sf::Color(124, 218, 249), 10, 10);
+    m_powerUpTex = AssetManager::instance().getTexture("powerup.png", sf::Color(182, 255, 255), 32, 32);
 
     if (loadFontFallback(m_font)) {
         m_fontLoaded = true;
@@ -85,7 +90,9 @@ Match::Match(bool resumeFromSaveFile)
         m_gameOverText.setPosition(220.f, 250.f);
     }
 
-    m_player.reset(new Player(m_playerTex, sf::Vector2f(400.f, 520.f)));
+    const sf::Vector2f worldBounds = Entity::getWorldBounds();
+    m_player.reset(new Player(m_playerTex,
+                              sf::Vector2f(worldBounds.x * 0.5f, worldBounds.y * 0.86f)));
 
     if (resumeFromSaveFile) {
         std::string initials;
@@ -93,10 +100,14 @@ Match::Match(bool resumeFromSaveFile)
         int savedLevel = 1;
         int savedWave = 0;
         int savedLives = 3;
-        if (readSavedStateFromDisk(savedScore, savedLevel, savedWave, savedLives, initials)) {
-            m_score = savedScore;
-            m_level = savedLevel;
-            m_waveInLevel = savedWave;
+        sf::Vector2f savedPosition(400.f, 520.f);
+        if (readSavedStateFromDisk(savedScore, savedLevel, savedWave, savedLives,
+                                   initials, savedPosition)) {
+                m_score = savedScore;
+                m_level = savedLevel;
+                m_waveInLevel = std::max(0, std::min(WAVES_PER_LEVEL - 1, savedWave));
+                m_player->setLives(savedLives);
+                m_player->setPosition(savedPosition);
         }
     }
 
@@ -108,7 +119,9 @@ void Match::spawnBoss() {
     m_enemies.clear();
     m_waveEnemyCount = 1;
 
-    Enemy boss(m_enemyBossTex, m_bulletTex, sf::Vector2f(400.f, 80.f));
+    const sf::Vector2f worldBounds = Entity::getWorldBounds();
+    Enemy boss(m_enemyBossTex, m_bulletTex,
+               sf::Vector2f(worldBounds.x * 0.5f, worldBounds.y * 0.16f));
     boss.configureAsBoss(m_level);
     boss.setScoreValue(1200 + m_level * 80);
     m_enemies.push_back(std::move(boss));
@@ -128,7 +141,8 @@ void Match::spawnNormalWave(int waveIndex) {
     m_highestNormalWaveCount = std::max(m_highestNormalWaveCount, enemyCount);
 
     std::uniform_int_distribution<int> typeRoll(0, 99);
-    std::uniform_real_distribution<float> xDist(80.f, 720.f);
+    const float worldWidth = Entity::getWorldBounds().x;
+    std::uniform_real_distribution<float> xDist(80.f, std::max(80.f, worldWidth - 80.f));
 
     auto addEnemy = [&](float x, float y, const sf::Texture& tex, Enemy::PatternType pattern,
                         float cooldown, float bulletSpeed, int hp, int scoreValue,
@@ -137,7 +151,8 @@ void Match::spawnNormalWave(int waveIndex) {
         Enemy& e = m_enemies.back();
         e.setColor(color);
         e.setRotation(180.f);
-        e.setScale(sf::Vector2f(0.85f, 0.85f));
+        e.fitToSize(64.f, 64.f);
+        e.setHitboxLocal(sf::FloatRect(-28.f, -28.f, 56.f, 56.f));
         e.setVelocity(sf::Vector2f(85.f, 0.f));
         e.setPattern(pattern);
         e.setShootCooldown(cooldown);
@@ -201,7 +216,9 @@ void Match::spawnWave() {
         spawnBoss();
     } else {
         spawnNormalWave(m_waveInLevel);
+        m_formation.selectPattern(m_waveInLevel + m_level, m_enemies.size());
     }
+    AudioManager::instance().playMusic(isBossWave ? "boss_music.ogg" : "wave_music.ogg", true);
 
     if (m_fontLoaded) {
         std::ostringstream oss;
@@ -215,7 +232,8 @@ void Match::spawnWave() {
         m_waveText.setString(oss.str());
         const sf::FloatRect bounds = m_waveText.getLocalBounds();
         m_waveText.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
-        m_waveText.setPosition(400.f, 300.f);
+        const sf::Vector2f worldBounds = Entity::getWorldBounds();
+        m_waveText.setPosition(worldBounds.x * 0.5f, worldBounds.y * 0.5f);
     }
 }
 
@@ -252,7 +270,8 @@ void Match::checkCollisions() {
         if (bullet->isFromPlayer()) {
             for (auto& enemy : m_enemies) {
                 if (!enemy.isAlive()) continue;
-                if (bullet->intersects(enemy)) {
+                if (bullet->getBounds().intersects(enemy.getBounds())) {
+                    AudioManager::instance().playSfx("collision_en.wav");
                     enemy.setHP(enemy.getHP() - 1);
                     bullet->destroy();
                     if (enemy.getHP() <= 0) {
@@ -267,7 +286,8 @@ void Match::checkCollisions() {
                 }
             }
         } else if (m_player->isAlive() && !m_player->isInvulnerable()
-                   && bullet->intersects(*m_player)) {
+                   && bullet->getBounds().intersects(m_player->getBounds())) {
+            AudioManager::instance().playSfx("collision.wav");
             m_player->loseLife();
             bullet->destroy();
             if (!m_player->isAlive()) {
@@ -276,24 +296,15 @@ void Match::checkCollisions() {
         }
     }
 
-    if (m_player->isAlive() && !m_player->isInvulnerable()) {
-        for (auto& enemy : m_enemies) {
-            if (!enemy.isAlive()) continue;
-            if (enemy.intersects(*m_player)) {
-                m_player->loseLife();
-                enemy.destroy();
-                if (!m_player->isAlive()) {
-                    m_gameOver = true;
-                }
-                break;
-            }
-        }
-    }
-
     if (m_player->isAlive()) {
         for (auto& powerUp : m_powerUps) {
             if (!powerUp.isAlive()) continue;
-            if (powerUp.intersects(*m_player)) {
+            sf::FloatRect pickupBounds = powerUp.getBounds();
+            pickupBounds.left -= 8.f;
+            pickupBounds.top -= 8.f;
+            pickupBounds.width += 16.f;
+            pickupBounds.height += 16.f;
+            if (pickupBounds.intersects(m_player->getBounds())) {
                 powerUp.apply(*m_player);
             }
         }
@@ -314,7 +325,9 @@ void Match::resetMatch() {
     m_bullets.clear();
     m_enemies.clear();
     m_powerUps.clear();
-    m_player.reset(new Player(m_playerTex, sf::Vector2f(400.f, 520.f)));
+    const sf::Vector2f worldBounds = Entity::getWorldBounds();
+    m_player.reset(new Player(m_playerTex,
+                              sf::Vector2f(worldBounds.x * 0.5f, worldBounds.y * 0.86f)));
     spawnWave();
 }
 
@@ -328,14 +341,17 @@ void Match::handleEvent(const sf::Event& event, Game& game) {
         if (event.key.code == sf::Keyboard::Return) {
             m_paused = !m_paused;
             game.setContinueAvailable(true);
+            AudioManager::instance().playSfx("selecting.wav");
             if (m_paused) {
-                AudioManager::instance().playMusic("menu_music.ogg", true);
+                AudioManager::instance().playMusic("pause_music.ogg", true);
             }
             return;
         }
 
         if (m_paused && event.key.code == sf::Keyboard::Escape) {
-            game.saveGameState(game.getPlayerInitials(), m_score, m_level, m_waveInLevel, m_player->getLives());
+            AudioManager::instance().playSfx("selecting.wav");
+            game.saveGameState(game.getPlayerInitials(), m_score, m_level, m_waveInLevel,
+                               m_player->getLives(), m_player->getPosition());
             game.setContinueAvailable(true);
             game.setScene(new SceneMenu());
         }
@@ -348,6 +364,7 @@ void Match::update(float dt, Game& game) {
     if (m_gameOver) {
         ScoreManager::instance().registerScore(m_score, game.getPlayerInitials());
         game.clearSavedGame();
+        game.setContinueAvailable(false);
         game.setScene(new SceneHighScores());
         return;
     }
@@ -358,15 +375,23 @@ void Match::update(float dt, Game& game) {
 
     m_player->update(dt);
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+    const bool firePressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Space)
+        || sf::Keyboard::isKeyPressed(sf::Keyboard::Z)
+        || sf::Keyboard::isKeyPressed(sf::Keyboard::X);
+    if (firePressed) {
         for (auto& bullet : m_player->shoot(m_bulletTex)) {
+            AudioManager::instance().playSfx("shoot.wav");
             m_bullets.push_back(std::move(bullet));
         }
     }
 
+    m_formation.update(m_enemies, dt, static_cast<float>(game.getWindowWidth()),
+                       static_cast<float>(game.getWindowHeight()));
     for (auto& enemy : m_enemies) {
         if (!enemy.isAlive()) continue;
-        enemy.setTargetPosition(m_player->getPosition());
+        if (enemy.isBoss()) {
+            enemy.setTargetPosition(m_player->getPosition());
+        }
         enemy.update(dt);
 
         if (enemy.getPosition().y > 650.f) {
@@ -375,6 +400,7 @@ void Match::update(float dt, Game& game) {
         }
 
         for (auto& bullet : enemy.shoot()) {
+            AudioManager::instance().playSfx("shoot.wav");
             bullet->setColor(sf::Color(186, 66, 40));
             m_bullets.push_back(std::move(bullet));
         }
@@ -394,13 +420,14 @@ void Match::update(float dt, Game& game) {
     if (bossAlive && m_bossSummonTimer <= 0.f) {
         m_bossSummonTimer = 9.f;
         for (int i = 0; i < 2; ++i) {
-            const float x = 220.f + i * 180.f;
-            const float y = 130.f + i * 30.f;
+            const sf::Vector2f worldBounds = Entity::getWorldBounds();
+            const float x = worldBounds.x * 0.38f + i * worldBounds.x * 0.20f;
+            const float y = worldBounds.y * 0.16f + i * 36.f;
             m_enemies.emplace_back(m_enemyEasyTex, m_bulletTex, sf::Vector2f(x, y));
             Enemy& e = m_enemies.back();
-            e.setTargetPosition(m_player->getPosition());
             e.setColor(sf::Color(248, 201, 77));
-            e.setScale(sf::Vector2f(0.8f, 0.8f));
+            e.fitToSize(56.f, 56.f);
+            e.setHitboxLocal(sf::FloatRect(-24.f, -24.f, 48.f, 48.f));
             e.setVelocity(sf::Vector2f(90.f, 0.f));
             e.setPattern(Enemy::PatternType::Single);
             e.setShootCooldown(1.7f);
@@ -452,6 +479,9 @@ void Match::drawHud(sf::RenderWindow& window) {
         << "   Oleada: " << (m_waveInLevel + 1) << "/" << WAVES_PER_LEVEL
         << "   Enemigos: " << m_waveEnemyCount;
     m_hudText.setString(oss.str());
+    const sf::FloatRect hudBounds = m_hudText.getLocalBounds();
+    const sf::Vector2u windowSize = window.getSize();
+    m_hudText.setPosition(static_cast<float>(windowSize.x) - hudBounds.width - 20.f, 16.f);
     window.draw(m_hudText);
 
     if (m_waveTransitionTimer > 0.f) {
@@ -471,7 +501,10 @@ void Match::drawHud(sf::RenderWindow& window) {
         pauseText.setCharacterSize(28);
         pauseText.setString("PAUSADO\nENTER para reanudar\nESC para guardar y volver");
         pauseText.setFillColor(sf::Color(255, 255, 255));
-        pauseText.setPosition(200.f, 220.f);
+        const sf::FloatRect pauseBounds = pauseText.getLocalBounds();
+        pauseText.setOrigin(pauseBounds.width / 2.f, pauseBounds.height / 2.f);
+        pauseText.setPosition(static_cast<float>(windowSize.x) * 0.5f,
+                              static_cast<float>(windowSize.y) * 0.5f);
         window.draw(pauseText);
     }
 }

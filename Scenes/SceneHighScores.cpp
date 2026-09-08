@@ -81,7 +81,9 @@ void SceneHighScores::update(float dt, Game& game) {
 void SceneHighScores::draw(sf::RenderWindow& window) {
     if (!m_fontLoaded) return;
 
-    static sf::RectangleShape background(sf::Vector2f(800.f, 600.f));
+    const sf::Vector2u windowSize = window.getSize();
+    sf::RectangleShape background(sf::Vector2f(static_cast<float>(windowSize.x),
+                                               static_cast<float>(windowSize.y)));
     background.setFillColor(sf::Color(5, 12, 22));
     background.setPosition(0.f, 0.f);
     window.draw(background);

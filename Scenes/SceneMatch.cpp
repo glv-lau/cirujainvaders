@@ -67,7 +67,9 @@ void SceneMatch::update(float dt, Game& game) {
 }
 
 void SceneMatch::draw(sf::RenderWindow& window) {
-    static sf::RectangleShape background(sf::Vector2f(800.f, 600.f));
+    const sf::Vector2u size = window.getSize();
+    sf::RectangleShape background(sf::Vector2f(static_cast<float>(size.x),
+                                               static_cast<float>(size.y)));
     background.setFillColor(sf::Color(15, 15, 20));
     background.setPosition(0.f, 0.f);
     window.draw(background);

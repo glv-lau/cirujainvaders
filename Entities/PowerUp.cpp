@@ -6,7 +6,8 @@ using namespace sf;
 PowerUp::PowerUp(Type type, const Texture& tex, const Vector2f& pos)
     : m_type(type)
 {
-    setTexture(tex, true);
+    setTextureToSize(tex, 32.f, 32.f, true);
+    setHitboxLocal(FloatRect(-24.f, -24.f, 48.f, 48.f));
     setPosition(pos);
     setVelocity(Vector2f(0.f, m_speed));
 
@@ -23,7 +24,8 @@ PowerUp::PowerUp(Type type, const Vector2f& pos)
 {
     const std::string assetName = "powerup.png";
     const sf::Color fallbackColor = sf::Color(180, 180, 255);
-    setTexture(assetName, fallbackColor, 14, 14, true);
+    setTexture(assetName, fallbackColor, 32, 32, true);
+    setHitboxLocal(FloatRect(-24.f, -24.f, 48.f, 48.f));
     setPosition(pos);
     setVelocity(Vector2f(0.f, m_speed));
 
@@ -38,7 +40,7 @@ PowerUp::PowerUp(Type type, const Vector2f& pos)
 void PowerUp::update(float dt) {
     Entity::update(dt);
 
-    if (getPosition().y > 700.f) {
+    if (getPosition().y > Entity::getWorldBounds().y + 100.f) {
         destroy();
     }
 }

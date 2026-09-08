@@ -3,6 +3,7 @@
 
 #include "Scenes/Scene.h"
 #include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/System/Vector2.hpp>
 #include <string>
 
 class Game {
@@ -23,11 +24,19 @@ public:
     int getSfxVolume() const;
     void setHudSize(int size);
     int getHudSize() const;
+    int getWindowWidth() const;
+    int getWindowHeight() const;
+    bool isFullscreen() const;
+    void setDisplaySettings(int width, int height, bool fullscreen);
 
     void loadConfigFromFile();
     void saveConfigToFile() const;
     bool loadSaveGameFromFile(std::string& initials, int& score, int& level, int& wave, int& lives) const;
+    bool loadSaveGameFromFile(std::string& initials, int& score, int& level, int& wave,
+                              int& lives, sf::Vector2f& playerPosition) const;
     void saveGameState(const std::string& initials, int score, int level, int wave, int lives) const;
+    void saveGameState(const std::string& initials, int score, int level, int wave, int lives,
+                       const sf::Vector2f& playerPosition) const;
     void clearSavedGame() const;
     void applyVolumeToAudio() const;
 
@@ -45,6 +54,9 @@ private:
     int m_musicVolume;
     int m_sfxVolume;
     int m_hudSize;
+    int m_windowWidth;
+    int m_windowHeight;
+    bool m_fullscreen;
     sf::RenderWindow m_win;
     Scene* m_scene;
     Scene* m_nextScene = nullptr;

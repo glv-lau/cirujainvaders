@@ -24,12 +24,16 @@ private:
     sf::Text m_musicText;
     sf::Text m_sfxText;
     sf::Text m_hudSizeText;
+    sf::Text m_resolutionText;
+    sf::Text m_fullscreenText;
     bool m_fontLoaded = false;
     int m_selectedOption = 0;
     int m_masterVolume = 100;
     int m_musicVolume = 100;
     int m_sfxVolume = 100;
     int m_hudSize = 50;
+    int m_resolutionIndex = 0;
+    bool m_fullscreen = false;
 };
 
 #endif

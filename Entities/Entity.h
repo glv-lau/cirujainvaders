@@ -29,6 +29,8 @@ public:
 
     // Colisión entre entidades (usa AABB)
     bool intersects(const Entity& other) const;
+    static void setWorldBounds(float width, float height);
+    static sf::Vector2f getWorldBounds();
 
     // Estado
     bool isAlive() const { return m_alive; }
@@ -47,6 +49,9 @@ public:
 
     // Texture / sprite helpers
     void setTexture(const sf::Texture& tex, bool resetOriginToCenter = true);
+    void setTextureToSize(const sf::Texture& tex, float width, float height,
+                          bool resetOriginToCenter = true);
+    void fitToSize(float width, float height);
     void setTexture(const std::string& assetName,
                    const sf::Color& fallbackColor,
                    unsigned int width,

@@ -7,19 +7,34 @@
 using namespace sf;
 
 Player::Player(const Texture& tex, const Vector2f& pos) {
-    setTexture(tex);
-    setScale(Vector2f(0.44f, 0.44f));
-    setHitboxLocal(FloatRect(-7.f, -7.f, 14.f, 18.f));
+    setTextureToSize(tex, 88.f, 88.f);
+    const FloatRect spriteBounds = m_sprite.getLocalBounds();
+    setHitboxLocal(FloatRect(
+        spriteBounds.left + spriteBounds.width * 0.36f,
+        spriteBounds.top + spriteBounds.height * 0.60f,
+        spriteBounds.width * 0.28f,
+        spriteBounds.height * 0.26f));
     setPosition(pos);
     setRotation(0.f);
 }
 
 Player::Player(const Vector2f& pos) {
-    setTexture("player.png", sf::Color(12, 183, 242), 48, 48);
-    setScale(Vector2f(0.44f, 0.44f));
-    setHitboxLocal(FloatRect(-7.f, -7.f, 14.f, 18.f));
+    setTexture("player.png", sf::Color(12, 183, 242), 88, 88);
+    const FloatRect spriteBounds = m_sprite.getLocalBounds();
+    setHitboxLocal(FloatRect(
+        spriteBounds.left + spriteBounds.width * 0.36f,
+        spriteBounds.top + spriteBounds.height * 0.60f,
+        spriteBounds.width * 0.28f,
+        spriteBounds.height * 0.26f));
     setPosition(pos);
     setRotation(0.f);
+}
+
+void Player::setLives(int lives) {
+    m_lives = std::max(0, std::min(5, lives));
+    if (m_lives > 0) {
+        m_alive = true;
+    }
 }
 
 float Player::getEffectiveCooldown() const {
@@ -44,9 +59,10 @@ void Player::update(float dt) {
     Entity::update(dt);
 
     Vector2f pos = getPosition();
+    const Vector2f bounds = Entity::getWorldBounds();
     const float margin = 20.f;
-    pos.x = std::max(margin, std::min(800.f - margin, pos.x));
-    pos.y = std::max(400.f, std::min(580.f, pos.y));
+    pos.x = std::max(margin, std::min(bounds.x - margin, pos.x));
+    pos.y = std::max(margin, std::min(bounds.y - margin, pos.y));
     setPosition(pos);
 
     if (m_shootTimer > 0.f) m_shootTimer -= dt;
@@ -78,7 +94,10 @@ std::vector<std::unique_ptr<Bullet>> Player::shoot(const Texture& bulletTexture)
     if (!canShoot() || !isAlive()) return bullets;
 
     Vector2f pos = getPosition();
-    const float offset = m_sprite.getLocalBounds().height / 2.f + 6.f;
+    // localBounds uses the original texture pixels, not the scaled sprite size.
+    // Use the transformed bounds so large source images do not spawn bullets
+    // far away from the visible player.
+    const float offset = getBounds().height / 2.f + 6.f;
     const Vector2f basePos = pos + Vector2f(0.f, -offset);
     const float speed = 700.f;
 

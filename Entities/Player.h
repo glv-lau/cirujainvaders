@@ -20,6 +20,7 @@ public:
     void loseLife();
     void addLife();
     int getLives() const { return m_lives; }
+    void setLives(int lives);
 
     void activateRapidFire(float duration);
     void activateSpreadShot(float duration);
