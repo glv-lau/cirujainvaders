@@ -17,13 +17,16 @@ public:
 private:
     void activateSelection(Game& game);
     void updateSelectionColors();
+    int getOptionCount(const Game& game) const;
 
     sf::Font m_font;
     sf::Text m_title;
     sf::Text m_startText;
+    sf::Text m_continueText;
     sf::Text m_optionsText;
     sf::Text m_exitText;
     bool m_fontLoaded = false;
+    bool m_continueVisible = false;
     int m_selectedOption = 0;
 };
 

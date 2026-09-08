@@ -13,10 +13,10 @@ public:
     void update(float dt, Game& game) override;
     void draw(sf::RenderWindow& window) override;
     void handleEvent(const sf::Event& event, Game& game) override;
-    void onEnter(Game& game) override {
-        game.playmusic("menu_music.ogg", game.getmusicvolume(), true);
-    }
+
 private:
+    void refreshLabels();
+
     sf::Font m_font;
     sf::Text m_title;
     sf::Text m_exitText;
@@ -31,3 +31,5 @@ private:
     int m_sfxVolume = 100;
     int m_hudSize = 50;
 };
+
+#endif

@@ -5,78 +5,119 @@
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Window/Keyboard.hpp>
 #include <algorithm>
+#include <sstream>
+
+namespace {
+    bool loadFontFallback(sf::Font& font) {
+        const std::string candidates[] = {
+            "arial.ttf",
+            "C:/Windows/Fonts/arial.ttf",
+            "C:/Windows/Fonts/calibri.ttf",
+            "C:/Windows/Fonts/consola.ttf",
+            "C:/Program Files (x86)/ZinjaI/MinGW32-gcc6/arial.ttf",
+            "C:/Users/Lau/Documents/GitHub/cirujainvaders/arial.ttf"
+        };
+        for (size_t i = 0; i < sizeof(candidates) / sizeof(candidates[0]); ++i) {
+            if (font.loadFromFile(candidates[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
 
 SceneOptions::SceneOptions()
+    : m_masterVolume(100)
+    , m_musicVolume(100)
+    , m_sfxVolume(100)
+    , m_hudSize(50)
 {
     (void)AssetManager::instance().getTexture("hud.png", sf::Color(70, 70, 70), 800, 120);
 
-    if (!m_font.loadFromFile("arial.ttf"))
-    {
+    if (!loadFontFallback(m_font)) {
         return;
     }
 
     m_fontLoaded = true;
-
     m_title.setFont(m_font);
     m_title.setCharacterSize(48);
-    m_title.setString("Opciones");
+    m_title.setString("OPCIONES");
     m_title.setFillColor(sf::Color::White);
-    m_title.setPosition(220.f, 150.f);
+    m_title.setPosition(220.f, 140.f);
 
     m_masterText.setFont(m_font);
     m_masterText.setCharacterSize(24);
     m_masterText.setFillColor(sf::Color::White);
-    m_masterText.setPosition(240.f, 320.f);
-    m_masterText.setString("Volumen Master: " + std::to_string(m_masterVolume) + "%");
+    m_masterText.setPosition(200.f, 250.f);
 
     m_musicText.setFont(m_font);
     m_musicText.setCharacterSize(24);
     m_musicText.setFillColor(sf::Color::White);
-    m_musicText.setPosition(240.f, 360.f);
-    m_musicText.setString("Volumen Música: " + std::to_string(m_musicVolume) + "%");
+    m_musicText.setPosition(200.f, 310.f);
 
     m_sfxText.setFont(m_font);
     m_sfxText.setCharacterSize(24);
     m_sfxText.setFillColor(sf::Color::White);
-    m_sfxText.setPosition(240.f, 400.f);
-    m_sfxText.setString("Volumen Efectos: " + std::to_string(m_sfxVolume) + "%");
+    m_sfxText.setPosition(200.f, 370.f);
 
     m_hudSizeText.setFont(m_font);
     m_hudSizeText.setCharacterSize(24);
     m_hudSizeText.setFillColor(sf::Color::White);
-    m_hudSizeText.setPosition(240.f, 440.f);
-    m_hudSizeText.setString("Tamaño HUD: " + std::to_string(m_hudSize) + "%");
+    m_hudSizeText.setPosition(200.f, 430.f);
 
     m_exitText.setFont(m_font);
     m_exitText.setCharacterSize(24);
-    m_exitText.setString("Volver");
+    m_exitText.setString("VOLVER");
     m_exitText.setFillColor(sf::Color::White);
-    m_exitText.setPosition(230.f, 480.f);
+    m_exitText.setPosition(300.f, 500.f);
+
+    m_masterVolume = 100;
+    m_musicVolume = 100;
+    m_sfxVolume = 100;
+    m_hudSize = 50;
+    refreshLabels();
 }
 
-void SceneOptions::handleEvent(const sf::Event& event, Game& game)
-{
+void SceneOptions::refreshLabels() {
+    std::stringstream ss;
+    ss << "VOL MEN MASTER: " << m_masterVolume << "%";
+    m_masterText.setString(ss.str());
+
+    ss.str("");
+    ss << "VOL MUSICA: " << m_musicVolume << "%";
+    m_musicText.setString(ss.str());
+
+    ss.str("");
+    ss << "VOL SFX: " << m_sfxVolume << "%";
+    m_sfxText.setString(ss.str());
+
+    ss.str("");
+    ss << "HUD: " << m_hudSize << "%";
+    m_hudSizeText.setString(ss.str());
+}
+
+void SceneOptions::handleEvent(const sf::Event& event, Game& game) {
     if (event.type != sf::Event::KeyPressed) {
         return;
     }
 
-    if (event.key.code == sf::Keyboard::Up) {
+    if (event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::W) {
         m_selectedOption = (m_selectedOption + 4) % 5;
-    } else if (event.key.code == sf::Keyboard::Down) {
+    } else if (event.key.code == sf::Keyboard::Down || event.key.code == sf::Keyboard::S) {
         m_selectedOption = (m_selectedOption + 1) % 5;
-    } else if (event.key.code == sf::Keyboard::Left) {
+    } else if (event.key.code == sf::Keyboard::Left || event.key.code == sf::Keyboard::A) {
         switch (m_selectedOption) {
             case 0:
                 m_masterVolume = std::max(0, m_masterVolume - 10);
-                game.setmastvolume(m_masterVolume);
+                game.setMasterVolume(m_masterVolume);
                 break;
             case 1:
                 m_musicVolume = std::max(0, m_musicVolume - 10);
-                game.setmusicvolume(m_musicVolume);
+                game.setMusicVolume(m_musicVolume);
                 break;
             case 2:
                 m_sfxVolume = std::max(0, m_sfxVolume - 10);
-                game.setsfxvolume(m_sfxVolume);
+                game.setSfxVolume(m_sfxVolume);
                 break;
             case 3:
                 m_hudSize = std::max(10, m_hudSize - 5);
@@ -85,19 +126,19 @@ void SceneOptions::handleEvent(const sf::Event& event, Game& game)
             default:
                 break;
         }
-    } else if (event.key.code == sf::Keyboard::Right) {
+    } else if (event.key.code == sf::Keyboard::Right || event.key.code == sf::Keyboard::D) {
         switch (m_selectedOption) {
             case 0:
                 m_masterVolume = std::min(100, m_masterVolume + 10);
-                game.setmastvolume(m_masterVolume);
+                game.setMasterVolume(m_masterVolume);
                 break;
             case 1:
                 m_musicVolume = std::min(100, m_musicVolume + 10);
-                game.setmusicvolume(m_musicVolume);
+                game.setMusicVolume(m_musicVolume);
                 break;
             case 2:
                 m_sfxVolume = std::min(100, m_sfxVolume + 10);
-                game.setsfxvolume(m_sfxVolume);
+                game.setSfxVolume(m_sfxVolume);
                 break;
             case 3:
                 m_hudSize = std::min(100, m_hudSize + 5);
@@ -106,22 +147,25 @@ void SceneOptions::handleEvent(const sf::Event& event, Game& game)
             default:
                 break;
         }
-    } else if (event.key.code == sf::Keyboard::Enter) {
+    } else if (event.key.code == sf::Keyboard::Return || event.key.code == sf::Keyboard::Space) {
         if (m_selectedOption == 4) {
             game.setScene(new SceneMenu());
         }
+    } else if (event.key.code == sf::Keyboard::Escape) {
+        game.setScene(new SceneMenu());
     }
 
-    m_masterText.setString("Volumen Master: " + std::to_string(m_masterVolume) + "%");
-    m_musicText.setString("Volumen Música: " + std::to_string(m_musicVolume) + "%");
-    m_sfxText.setString("Volumen Efectos: " + std::to_string(m_sfxVolume) + "%");
-    m_hudSizeText.setString("Tamaño HUD: " + std::to_string(m_hudSize) + "%");
+    refreshLabels();
 }
 
-void SceneOptions::update(float dt, Game& game)
-{
+void SceneOptions::update(float dt, Game& game) {
     (void)dt;
-    (void)game;
+
+    m_masterVolume = game.getMasterVolume();
+    m_musicVolume = game.getMusicVolume();
+    m_sfxVolume = game.getSfxVolume();
+    m_hudSize = game.getHudSize();
+    refreshLabels();
 
     m_masterText.setFillColor(sf::Color::White);
     m_musicText.setFillColor(sf::Color::White);
@@ -130,28 +174,19 @@ void SceneOptions::update(float dt, Game& game)
     m_exitText.setFillColor(sf::Color::White);
 
     switch (m_selectedOption) {
-        case 0:
-            m_masterText.setFillColor(sf::Color::Yellow);
-            break;
-        case 1:
-            m_musicText.setFillColor(sf::Color::Yellow);
-            break;
-        case 2:
-            m_sfxText.setFillColor(sf::Color::Yellow);
-            break;
-        case 3:
-            m_hudSizeText.setFillColor(sf::Color::Yellow);
-            break;
-        case 4:
-            m_exitText.setFillColor(sf::Color::Yellow);
-            break;
+        case 0: m_masterText.setFillColor(sf::Color::Yellow); break;
+        case 1: m_musicText.setFillColor(sf::Color::Yellow); break;
+        case 2: m_sfxText.setFillColor(sf::Color::Yellow); break;
+        case 3: m_hudSizeText.setFillColor(sf::Color::Yellow); break;
+        case 4: m_exitText.setFillColor(sf::Color::Yellow); break;
+        default: break;
     }
 }
 
-void SceneOptions::draw(sf::RenderWindow &window)
-{
-    if (!m_fontLoaded)
+void SceneOptions::draw(sf::RenderWindow& window) {
+    if (!m_fontLoaded) {
         return;
+    }
 
     static sf::RectangleShape panel(sf::Vector2f(760.f, 420.f));
     panel.setFillColor(sf::Color(45, 45, 55));

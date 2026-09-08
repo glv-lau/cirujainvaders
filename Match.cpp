@@ -1,9 +1,14 @@
 #include "Match.h"
 #include "Game.h"
 #include "AssetManager.h"
+#include "AudioManager.h"
+#include "Scenes/SceneMenu.h"
+#include "Scenes/SceneHighScores.h"
 #include <SFML/Graphics/Image.hpp>
+#include <fstream>
 #include <SFML/Window/Keyboard.hpp>
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -26,9 +31,32 @@ namespace {
         }
         return false;
     }
+
+    bool readSavedStateFromDisk(int& score, int& level, int& wave, int& lives, std::string& initials) {
+        std::ifstream input("partida_guardada.txt");
+        if (!input.is_open()) {
+            input.open("savegame.txt");
+        }
+        if (!input.is_open()) {
+            return false;
+        }
+
+        initials.clear();
+        score = 0;
+        level = 1;
+        wave = 0;
+        lives = 3;
+        input >> initials >> score >> level >> wave >> lives;
+        return (!initials.empty() && input.good());
+    }
 }
 
 Match::Match()
+    : Match(false)
+{
+}
+
+Match::Match(bool resumeFromSaveFile)
     : m_rng(std::random_device{}())
 {
     m_playerTex = AssetManager::instance().getTexture("player.png", sf::Color(12, 183, 242), 48, 48);
@@ -58,6 +86,20 @@ Match::Match()
     }
 
     m_player.reset(new Player(m_playerTex, sf::Vector2f(400.f, 520.f)));
+
+    if (resumeFromSaveFile) {
+        std::string initials;
+        int savedScore = 0;
+        int savedLevel = 1;
+        int savedWave = 0;
+        int savedLives = 3;
+        if (readSavedStateFromDisk(savedScore, savedLevel, savedWave, savedLives, initials)) {
+            m_score = savedScore;
+            m_level = savedLevel;
+            m_waveInLevel = savedWave;
+        }
+    }
+
     spawnWave();
     m_waveTransitionTimer = 1.2f;
 }
@@ -96,7 +138,7 @@ void Match::spawnNormalWave(int waveIndex) {
         e.setColor(color);
         e.setRotation(180.f);
         e.setScale(sf::Vector2f(0.85f, 0.85f));
-        e.setVelocity(sf::Vector2f(0.f, speedY));
+        e.setVelocity(sf::Vector2f(85.f, 0.f));
         e.setPattern(pattern);
         e.setShootCooldown(cooldown);
         e.setBulletSpeed(bulletSpeed);
@@ -179,7 +221,7 @@ void Match::spawnWave() {
 
 void Match::tryDropPowerUp(const sf::Vector2f& pos, bool guaranteed) {
     std::uniform_real_distribution<float> dist(0.f, 1.f);
-    if (!guaranteed && dist(m_rng) > 0.25f) return;
+    if (!guaranteed && dist(m_rng) > 0.04f) return;
 
     std::uniform_int_distribution<int> typeDist(0, 3);
     const auto type = static_cast<PowerUp::Type>(typeDist(m_rng));
@@ -265,8 +307,10 @@ void Match::resetMatch() {
     m_waveEnemyCount = 0;
     m_highestNormalWaveCount = 0;
     m_gameOver = false;
+    m_paused = false;
     m_waitingForNextWave = false;
     m_waveTransitionTimer = 0.f;
+    m_bossSummonTimer = 0.f;
     m_bullets.clear();
     m_enemies.clear();
     m_powerUps.clear();
@@ -275,17 +319,42 @@ void Match::resetMatch() {
 }
 
 void Match::handleEvent(const sf::Event& event, Game& game) {
-    (void)game;
-    if (event.type == sf::Event::KeyPressed && m_gameOver
-        && event.key.code == sf::Keyboard::R) {
-        resetMatch();
+    if (event.type == sf::Event::KeyPressed) {
+        if (m_gameOver && event.key.code == sf::Keyboard::R) {
+            resetMatch();
+            return;
+        }
+
+        if (event.key.code == sf::Keyboard::Return) {
+            m_paused = !m_paused;
+            game.setContinueAvailable(true);
+            if (m_paused) {
+                AudioManager::instance().playMusic("menu_music.ogg", true);
+            }
+            return;
+        }
+
+        if (m_paused && event.key.code == sf::Keyboard::Escape) {
+            game.saveGameState(game.getPlayerInitials(), m_score, m_level, m_waveInLevel, m_player->getLives());
+            game.setContinueAvailable(true);
+            game.setScene(new SceneMenu());
+        }
     }
 }
 
 void Match::update(float dt, Game& game) {
     (void)game;
 
-    if (m_gameOver) return;
+    if (m_gameOver) {
+        ScoreManager::instance().registerScore(m_score, game.getPlayerInitials());
+        game.clearSavedGame();
+        game.setScene(new SceneHighScores());
+        return;
+    }
+
+    if (m_paused) {
+        return;
+    }
 
     m_player->update(dt);
 
@@ -297,6 +366,7 @@ void Match::update(float dt, Game& game) {
 
     for (auto& enemy : m_enemies) {
         if (!enemy.isAlive()) continue;
+        enemy.setTargetPosition(m_player->getPosition());
         enemy.update(dt);
 
         if (enemy.getPosition().y > 650.f) {
@@ -307,6 +377,37 @@ void Match::update(float dt, Game& game) {
         for (auto& bullet : enemy.shoot()) {
             bullet->setColor(sf::Color(186, 66, 40));
             m_bullets.push_back(std::move(bullet));
+        }
+    }
+
+    if (m_bossSummonTimer > 0.f) {
+        m_bossSummonTimer -= dt;
+    }
+
+    bool bossAlive = false;
+    for (const auto& enemy : m_enemies) {
+        if (enemy.isAlive() && enemy.isBoss()) {
+            bossAlive = true;
+            break;
+        }
+    }
+    if (bossAlive && m_bossSummonTimer <= 0.f) {
+        m_bossSummonTimer = 9.f;
+        for (int i = 0; i < 2; ++i) {
+            const float x = 220.f + i * 180.f;
+            const float y = 130.f + i * 30.f;
+            m_enemies.emplace_back(m_enemyEasyTex, m_bulletTex, sf::Vector2f(x, y));
+            Enemy& e = m_enemies.back();
+            e.setTargetPosition(m_player->getPosition());
+            e.setColor(sf::Color(248, 201, 77));
+            e.setScale(sf::Vector2f(0.8f, 0.8f));
+            e.setVelocity(sf::Vector2f(90.f, 0.f));
+            e.setPattern(Enemy::PatternType::Single);
+            e.setShootCooldown(1.7f);
+            e.setBulletSpeed(180.f);
+            e.setHP(1);
+            e.setScoreValue(80);
+            e.setAmplitude(10.f);
         }
     }
 
@@ -362,6 +463,16 @@ void Match::drawHud(sf::RenderWindow& window) {
         go << "GAME OVER\nPuntos: " << m_score << "\n[R] Reintentar";
         m_gameOverText.setString(go.str());
         window.draw(m_gameOverText);
+    }
+
+    if (m_paused) {
+        sf::Text pauseText;
+        pauseText.setFont(m_font);
+        pauseText.setCharacterSize(28);
+        pauseText.setString("PAUSADO\nENTER para reanudar\nESC para guardar y volver");
+        pauseText.setFillColor(sf::Color(255, 255, 255));
+        pauseText.setPosition(200.f, 220.f);
+        window.draw(pauseText);
     }
 }
 

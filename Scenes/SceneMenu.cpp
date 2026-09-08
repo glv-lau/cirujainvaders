@@ -2,6 +2,9 @@
 #include "../Game.h"
 #include "../AssetManager.h"
 #include "SceneStageIntro.h"
+#include "SceneInitials.h"
+#include "SceneOptions.h"
+#include "../Match.h"
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Window/Mouse.hpp>
@@ -51,50 +54,96 @@ SceneMenu::SceneMenu()
     m_startText.setCharacterSize(30);
     m_startText.setString("START");
     m_startText.setFillColor(kMenuNormal);
-    m_startText.setPosition(330.f, 260.f);
+    m_startText.setPosition(330.f, 240.f);
+
+    m_continueText.setFont(m_font);
+    m_continueText.setCharacterSize(30);
+    m_continueText.setString("CONTINUE");
+    m_continueText.setFillColor(kMenuNormal);
+    m_continueText.setPosition(300.f, 300.f);
 
     m_optionsText.setFont(m_font);
     m_optionsText.setCharacterSize(30);
     m_optionsText.setString("OPTIONS");
     m_optionsText.setFillColor(kMenuNormal);
-    m_optionsText.setPosition(300.f, 320.f);
+    m_optionsText.setPosition(300.f, 360.f);
 
     m_exitText.setFont(m_font);
     m_exitText.setCharacterSize(30);
     m_exitText.setString("EXIT");
     m_exitText.setFillColor(kMenuNormal);
-    m_exitText.setPosition(335.f, 380.f);
+    m_exitText.setPosition(335.f, 420.f);
 
     updateSelectionColors();
 }
 
+int SceneMenu::getOptionCount(const Game& game) const {
+    return game.hasContinueAvailable() ? 4 : 3;
+}
+
 void SceneMenu::activateSelection(Game& game) {
-    switch (m_selectedOption) {
-        case 0:
-            game.setScene(new SceneStageIntro());
-            break;
-        case 1:
-            break;
-        case 2:
-            game.getWindow().close();
-            break;
-        default:
-            break;
+    const int optionCount = getOptionCount(game);
+    if (m_selectedOption < 0 || m_selectedOption >= optionCount) {
+        m_selectedOption = 0;
+    }
+
+    if (game.hasContinueAvailable()) {
+        switch (m_selectedOption) {
+            case 0:
+                game.setContinueAvailable(true);
+                game.setScene(new SceneInitials());
+                break;
+            case 1:
+                game.setScene(new Match(true));
+                break;
+            case 2:
+                game.setScene(new SceneOptions());
+                break;
+            case 3:
+                game.getWindow().close();
+                break;
+            default:
+                break;
+        }
+    } else {
+        switch (m_selectedOption) {
+            case 0:
+                game.setContinueAvailable(true);
+                game.setScene(new SceneInitials());
+                break;
+            case 1:
+                game.setScene(new SceneOptions());
+                break;
+            case 2:
+                game.getWindow().close();
+                break;
+            default:
+                break;
+        }
     }
 }
 
 void SceneMenu::updateSelectionColors() {
     m_startText.setFillColor(m_selectedOption == 0 ? kMenuSelected : kMenuNormal);
-    m_optionsText.setFillColor(m_selectedOption == 1 ? kMenuSelected : kMenuNormal);
-    m_exitText.setFillColor(m_selectedOption == 2 ? kMenuSelected : kMenuNormal);
+    if (m_continueVisible) {
+        m_continueText.setFillColor(m_selectedOption == 1 ? kMenuSelected : kMenuNormal);
+        m_optionsText.setFillColor(m_selectedOption == 2 ? kMenuSelected : kMenuNormal);
+        m_exitText.setFillColor(m_selectedOption == 3 ? kMenuSelected : kMenuNormal);
+    } else {
+        m_optionsText.setFillColor(m_selectedOption == 1 ? kMenuSelected : kMenuNormal);
+        m_exitText.setFillColor(m_selectedOption == 2 ? kMenuSelected : kMenuNormal);
+    }
 }
 
 void SceneMenu::handleEvent(const sf::Event& event, Game& game) {
+    m_continueVisible = game.hasContinueAvailable();
+
     if (event.type == sf::Event::KeyPressed) {
+        const int optionCount = getOptionCount(game);
         if (event.key.code == sf::Keyboard::Up || event.key.code == sf::Keyboard::W) {
-            m_selectedOption = (m_selectedOption + 2) % 3;
+            m_selectedOption = (m_selectedOption + optionCount - 1) % optionCount;
         } else if (event.key.code == sf::Keyboard::Down || event.key.code == sf::Keyboard::S) {
-            m_selectedOption = (m_selectedOption + 1) % 3;
+            m_selectedOption = (m_selectedOption + 1) % optionCount;
         } else if (event.key.code == sf::Keyboard::Return || event.key.code == sf::Keyboard::Space) {
             activateSelection(game);
         } else if (event.key.code == sf::Keyboard::Escape) {
@@ -107,10 +156,12 @@ void SceneMenu::handleEvent(const sf::Event& event, Game& game) {
         const sf::Vector2f pos(static_cast<float>(event.mouseMove.x), static_cast<float>(event.mouseMove.y));
         if (m_startText.getGlobalBounds().contains(pos)) {
             m_selectedOption = 0;
-        } else if (m_optionsText.getGlobalBounds().contains(pos)) {
+        } else if (game.hasContinueAvailable() && m_continueText.getGlobalBounds().contains(pos)) {
             m_selectedOption = 1;
+        } else if (m_optionsText.getGlobalBounds().contains(pos)) {
+            m_selectedOption = game.hasContinueAvailable() ? 2 : 1;
         } else if (m_exitText.getGlobalBounds().contains(pos)) {
-            m_selectedOption = 2;
+            m_selectedOption = game.hasContinueAvailable() ? 3 : 2;
         }
         updateSelectionColors();
     }
@@ -120,19 +171,26 @@ void SceneMenu::handleEvent(const sf::Event& event, Game& game) {
         if (m_startText.getGlobalBounds().contains(pos)) {
             m_selectedOption = 0;
             activateSelection(game);
-        } else if (m_optionsText.getGlobalBounds().contains(pos)) {
+        } else if (game.hasContinueAvailable() && m_continueText.getGlobalBounds().contains(pos)) {
             m_selectedOption = 1;
-            updateSelectionColors();
+            game.setScene(new Match(true));
+        } else if (m_optionsText.getGlobalBounds().contains(pos)) {
+            m_selectedOption = game.hasContinueAvailable() ? 2 : 1;
+            game.setScene(new SceneOptions());
         } else if (m_exitText.getGlobalBounds().contains(pos)) {
-            m_selectedOption = 2;
-            activateSelection(game);
+            m_selectedOption = game.hasContinueAvailable() ? 3 : 2;
+            game.getWindow().close();
         }
     }
 }
 
 void SceneMenu::update(float dt, Game& game) {
     (void)dt;
-    (void)game;
+    m_continueVisible = game.hasContinueAvailable();
+    if (!m_continueVisible && m_selectedOption > 2) {
+        m_selectedOption = 2;
+    }
+    updateSelectionColors();
 }
 
 void SceneMenu::draw(sf::RenderWindow& window) {
@@ -145,6 +203,9 @@ void SceneMenu::draw(sf::RenderWindow& window) {
 
     window.draw(m_title);
     window.draw(m_startText);
+    if (m_continueVisible) {
+        window.draw(m_continueText);
+    }
     window.draw(m_optionsText);
     window.draw(m_exitText);
 }

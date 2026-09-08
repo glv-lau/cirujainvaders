@@ -6,6 +6,7 @@
 #include "Entities/Enemy.h"
 #include "Entities/Bullet.h"
 #include "Entities/PowerUp.h"
+#include "ScoreManager.h"
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <memory>
@@ -16,6 +17,7 @@
 class Match : public Scene {
 public:
     Match();
+    explicit Match(bool resumeFromSaveFile);
     ~Match() override = default;
 
     void update(float dt, Game& game) override;
@@ -52,8 +54,10 @@ private:
     bool m_waitingForNextWave = false;
     float m_waveTransitionTimer = 0.f;
     bool m_gameOver = false;
+    bool m_paused = false;
     int m_waveEnemyCount = 0;
     int m_highestNormalWaveCount = 0;
+    float m_bossSummonTimer = 0.f;
 
 
     void spawnWave();

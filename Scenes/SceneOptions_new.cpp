@@ -102,7 +102,7 @@ void SceneOptions::handleEvent(const sf::Event& event, Game& game)
             default:
                 break;
         }
-    } else if (event.key.code == sf::Keyboard::Enter) {
+    } else if (event.key.code == sf::Keyboard::Return) {
         if (m_selectedOption == 4) {
             game.setScene(new SceneMenu());
         }

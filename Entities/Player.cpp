@@ -8,12 +8,16 @@ using namespace sf;
 
 Player::Player(const Texture& tex, const Vector2f& pos) {
     setTexture(tex);
+    setScale(Vector2f(0.44f, 0.44f));
+    setHitboxLocal(FloatRect(-7.f, -7.f, 14.f, 18.f));
     setPosition(pos);
     setRotation(0.f);
 }
 
 Player::Player(const Vector2f& pos) {
     setTexture("player.png", sf::Color(12, 183, 242), 48, 48);
+    setScale(Vector2f(0.44f, 0.44f));
+    setHitboxLocal(FloatRect(-7.f, -7.f, 14.f, 18.f));
     setPosition(pos);
     setRotation(0.f);
 }

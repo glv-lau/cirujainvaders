@@ -42,6 +42,7 @@ public:
     // Simple movement setters
     void setVelocity(const sf::Vector2f& v) { m_velocity = v; }
     void setAmplitude(float a) { m_amplitude = a; }
+    void setTargetPosition(const sf::Vector2f& pos) { m_targetPosition = pos; m_hasTarget = true; }
 
     void configureAsBoss(int level);
     bool isBoss() const { return m_isBoss; }
@@ -68,4 +69,6 @@ private:
     float m_timeAlive = 0.f;
     float m_amplitude = 40.f;
     bool m_isBoss = false;
+    sf::Vector2f m_targetPosition;
+    bool m_hasTarget = false;
 };
