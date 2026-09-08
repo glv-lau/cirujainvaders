@@ -1,12 +1,12 @@
 
 #include "Game.h"
-#include "Match.h"
+#include "Scenes/SceneMenu.h"
 
 int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
 
-    Game game(new Match());
+    Game game(new SceneMenu());
     game.play();
     return 0;
 }

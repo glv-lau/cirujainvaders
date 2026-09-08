@@ -11,8 +11,7 @@ public:
     explicit Player(const sf::Vector2f& pos);
 
     void update(float dt) override;
-    void draw(sf::RenderWindow& win) const;;
-
+    void draw(sf::RenderWindow& win) const;
     std::vector<std::unique_ptr<Bullet>> shoot(const sf::Texture& bulletTexture);
 
     bool canShoot() const { return m_shootTimer <= 0.f; }

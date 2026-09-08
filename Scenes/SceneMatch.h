@@ -2,7 +2,7 @@
 #define SCENEMATCH_H
 
 #include "Scene.h"
-#include "Match.h"
+#include "../Match.h"
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>
 
@@ -26,3 +26,4 @@ private:
     Match m_match;
     bool m_fontLoaded = false;
 };
+#endif

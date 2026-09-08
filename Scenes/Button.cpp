@@ -30,5 +30,5 @@ bool Button::contains(const sf::Vector2f& mousePos) const {
 
 void Button::setSelected(bool selected) {
     m_isPressed = selected;
-    m_box.setFillColor(selected ? sf::Color(100, 200, 100) : sf::Color::White);
+    m_box.setFillColor(selected ? sf::Color(9, 121, 176) : sf::Color::White);
 }

@@ -22,25 +22,29 @@ Enemy::Enemy(const std::string& assetName, const Texture& bulletTex, const Vecto
 }
 
 void Enemy::update(float dt) {
-    // ejemplo: movimiento vertical por velocity + sin en x según m_timeAlive
     m_timeAlive += dt;
-    // movimiento base
+
     if ((m_velocity.x != 0.f) || (m_velocity.y != 0.f)) {
         m_sprite.move(m_velocity * dt);
     }
 
-    // añadir oscilación horizontal leve
     Vector2f p = getPosition();
-    p.x += std::sin(m_timeAlive * 2.0f) * (m_amplitude * dt); // pequeño ajuste por frame
+    p.x += std::sin(m_timeAlive * 2.0f) * (m_amplitude * dt);
     setPosition(p);
 
-    // timers
+    if (m_isBoss) {
+        Vector2f bossPos = getPosition();
+        if (bossPos.y > 160.f) {
+            bossPos.y = 160.f;
+            setPosition(bossPos);
+            m_velocity.y = 0.f;
+        }
+    }
+
     if (m_shootTimer > 0.f) m_shootTimer -= dt;
 
-    // para spiral, actualizar ángulo
     if (m_pattern == PatternType::Spiral) {
-        m_spiralAngle += m_spiralDegPerSec * dt; // grados
-        // mantener 0..360
+        m_spiralAngle += m_spiralDegPerSec * dt;
         if (m_spiralAngle >= 360.f) m_spiralAngle -= 360.f;
     }
 }
@@ -105,7 +109,7 @@ void Enemy::configureAsBoss(int level) {
     m_isBoss = true;
     m_hp = 20 + level * 8;
     setScale(Vector2f(2.2f, 2.2f));
-    setColor(Color(180, 50, 255));
+    setColor(Color(124, 14, 54));
     setRotation(180.f);
     setPattern(PatternType::Spiral);
     setShootCooldown(0.7f);

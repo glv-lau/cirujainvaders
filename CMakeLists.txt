@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(CirujaInvaders CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
@@ -13,6 +13,7 @@ add_executable(CirujaInvaders
     AssetManager.cpp
     Scenes/Scene.cpp
     Scenes/SceneMenu.cpp
+    Scenes/SceneStageIntro.cpp
     Scenes/Button.cpp
     Entities/Entity.cpp
     Entities/Player.cpp
@@ -30,3 +31,7 @@ target_include_directories(CirujaInvaders PRIVATE
 target_link_libraries(CirujaInvaders PRIVATE sfml-graphics sfml-window sfml-system)
 
 configure_file(${CMAKE_SOURCE_DIR}/Nave.png ${CMAKE_BINARY_DIR}/Nave.png COPYONLY)
+
+if(EXISTS ${CMAKE_SOURCE_DIR}/arial.ttf)
+    configure_file(${CMAKE_SOURCE_DIR}/arial.ttf ${CMAKE_BINARY_DIR}/arial.ttf COPYONLY)
+endif()

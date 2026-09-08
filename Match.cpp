@@ -6,19 +6,40 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <string>
+
+namespace {
+    bool loadFontFallback(sf::Font& font) {
+        const std::string candidates[] = {
+            "arial.ttf",
+            "C:/Windows/Fonts/arial.ttf",
+            "C:/Windows/Fonts/calibri.ttf",
+            "C:/Windows/Fonts/consola.ttf",
+            "C:/Program Files (x86)/ZinjaI/MinGW32-gcc6/arial.ttf",
+            "C:/Users/Lau/Documents/GitHub/cirujainvaders/arial.ttf"
+        };
+
+        for (size_t i = 0; i < sizeof(candidates) / sizeof(candidates[0]); ++i) {
+            if (font.loadFromFile(candidates[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
 
 Match::Match()
     : m_rng(std::random_device{}())
 {
-    m_playerTex = AssetManager::instance().getTexture("player.png", sf::Color(80, 180, 255), 48, 48);
-    m_enemyEasyTex = AssetManager::instance().getTexture("enemy_basic.png", sf::Color(255, 120, 120), 40, 40);
-    m_enemyHardTex = AssetManager::instance().getTexture("enemy_hard.png", sf::Color(220, 80, 220), 42, 42);
-    m_enemySpecialTex = AssetManager::instance().getTexture("enemy_special.png", sf::Color(255, 220, 80), 44, 44);
-    m_enemyBossTex = AssetManager::instance().getTexture("enemy_boss.png", sf::Color(180, 50, 255), 72, 72);
-    m_bulletTex = AssetManager::instance().getTexture("bullet_player.png", sf::Color(255, 255, 80), 6, 6);
-    m_powerUpTex = AssetManager::instance().getTexture("powerup.png", sf::Color(180, 180, 255), 14, 14);
+    m_playerTex = AssetManager::instance().getTexture("player.png", sf::Color(12, 183, 242), 48, 48);
+    m_enemyEasyTex = AssetManager::instance().getTexture("enemy_basic.png", sf::Color(248, 201, 77), 40, 40);
+    m_enemyHardTex = AssetManager::instance().getTexture("enemy_hard.png", sf::Color(216, 129, 57), 42, 42);
+    m_enemySpecialTex = AssetManager::instance().getTexture("enemy_special.png", sf::Color(186, 66, 40), 44, 44);
+    m_enemyBossTex = AssetManager::instance().getTexture("enemy_boss.png", sf::Color(124, 14, 54), 72, 72);
+    m_bulletTex = AssetManager::instance().getTexture("bullet_player.png", sf::Color(124, 218, 249), 6, 6);
+    m_powerUpTex = AssetManager::instance().getTexture("powerup.png", sf::Color(182, 255, 255), 14, 14);
 
-    if (m_font.loadFromFile("arial.ttf")) {
+    if (loadFontFallback(m_font)) {
         m_fontLoaded = true;
         m_hudText.setFont(m_font);
         m_hudText.setCharacterSize(18);
@@ -36,9 +57,9 @@ Match::Match()
         m_gameOverText.setPosition(220.f, 250.f);
     }
 
-	m_player.reset(new Player(m_playerTex, sf::Vector2f(400.f, 520.f)));
+    m_player.reset(new Player(m_playerTex, sf::Vector2f(400.f, 520.f)));
     spawnWave();
-    m_waveTransitionTimer = 1.5f;
+    m_waveTransitionTimer = 1.2f;
 }
 
 void Match::spawnBoss() {
@@ -94,38 +115,38 @@ void Match::spawnNormalWave(int waveIndex) {
         if (waveIndex == 0) {
             if (roll < 70) {
                 addEnemy(x, y, m_enemyEasyTex, Enemy::PatternType::Single, 2.0f, 160.f, 1, 100,
-                         sf::Color(255, 180, 180), 4, 10);
+                         sf::Color(248, 201, 77), 4, 10);
             } else {
                 addEnemy(x, y, m_enemyHardTex, Enemy::PatternType::Fan, 1.8f, 180.f, 2, 180,
-                         sf::Color(255, 160, 255), 5, 10);
+                         sf::Color(216, 129, 57), 5, 10);
             }
         } else if (waveIndex == 1) {
             if (roll < 45) {
                 addEnemy(x, y, m_enemyEasyTex, Enemy::PatternType::Single, 1.8f, 170.f, 1, 120,
-                         sf::Color(255, 170, 170), 4, 10);
+                         sf::Color(248, 201, 77), 4, 10);
             } else if (roll < 80) {
                 addEnemy(x, y, m_enemyHardTex, Enemy::PatternType::Fan, 1.5f, 190.f, 3, 240,
-                         sf::Color(220, 160, 255), 6, 12);
+                         sf::Color(216, 129, 57), 6, 12);
             } else {
                 const Enemy::PatternType specialPattern = (typeRoll(m_rng) % 2 == 0)
                     ? Enemy::PatternType::Circular
                     : Enemy::PatternType::Spiral;
                 addEnemy(x, y, m_enemySpecialTex, specialPattern, 1.6f, 180.f, 2, 300,
-                         sf::Color(255, 210, 120), 5, 12);
+                         sf::Color(186, 66, 40), 5, 12);
             }
         } else {
             if (roll < 30) {
                 addEnemy(x, y, m_enemyEasyTex, Enemy::PatternType::Single, 1.7f, 170.f, 1, 140,
-                         sf::Color(255, 150, 150), 4, 10);
+                         sf::Color(248, 201, 77), 4, 10);
             } else if (roll < 70) {
                 addEnemy(x, y, m_enemyHardTex, Enemy::PatternType::Fan, 1.4f, 200.f, 3, 280,
-                         sf::Color(220, 140, 255), 7, 14);
+                         sf::Color(216, 129, 57), 7, 14);
             } else {
                 const Enemy::PatternType specialPattern = (typeRoll(m_rng) % 3 == 0)
                     ? Enemy::PatternType::Circular
                     : Enemy::PatternType::Spiral;
                 addEnemy(x, y, m_enemySpecialTex, specialPattern, 1.3f, 210.f, 2, 340,
-                         sf::Color(255, 220, 130), 8, 14);
+                         sf::Color(186, 66, 40), 8, 14);
             }
         }
     }
@@ -213,6 +234,20 @@ void Match::checkCollisions() {
         }
     }
 
+    if (m_player->isAlive() && !m_player->isInvulnerable()) {
+        for (auto& enemy : m_enemies) {
+            if (!enemy.isAlive()) continue;
+            if (enemy.intersects(*m_player)) {
+                m_player->loseLife();
+                enemy.destroy();
+                if (!m_player->isAlive()) {
+                    m_gameOver = true;
+                }
+                break;
+            }
+        }
+    }
+
     if (m_player->isAlive()) {
         for (auto& powerUp : m_powerUps) {
             if (!powerUp.isAlive()) continue;
@@ -270,6 +305,7 @@ void Match::update(float dt, Game& game) {
         }
 
         for (auto& bullet : enemy.shoot()) {
+            bullet->setColor(sf::Color(186, 66, 40));
             m_bullets.push_back(std::move(bullet));
         }
     }
@@ -291,7 +327,6 @@ void Match::update(float dt, Game& game) {
             m_waitingForNextWave = false;
             spawnWave();
         }
-        return;
     }
 
     if (m_enemies.empty() && !m_waitingForNextWave) {

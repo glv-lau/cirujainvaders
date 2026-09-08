@@ -3,9 +3,30 @@
 #include "../AssetManager.h"
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Window/Keyboard.hpp>
+#include <string>
+
+namespace {
+    bool loadFontFallback(sf::Font& font) {
+        const std::string candidates[] = {
+            "arial.ttf",
+            "C:/Windows/Fonts/arial.ttf",
+            "C:/Windows/Fonts/calibri.ttf",
+            "C:/Windows/Fonts/consola.ttf",
+            "C:/Program Files (x86)/ZinjaI/MinGW32-gcc6/arial.ttf",
+            "C:/Users/Lau/Documents/GitHub/cirujainvaders/arial.ttf"
+        };
+
+        for (size_t i = 0; i < sizeof(candidates) / sizeof(candidates[0]); ++i) {
+            if (font.loadFromFile(candidates[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
 
 SceneMatch::SceneMatch() {
-    if (!m_font.loadFromFile("arial.ttf"))
+    if (!loadFontFallback(m_font))
     {
         return;
     }

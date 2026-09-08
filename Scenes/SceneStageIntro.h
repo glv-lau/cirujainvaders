@@ -1,30 +1,26 @@
-#ifndef SCENEMENU_H
-#define SCENEMENU_H
+#ifndef SCENESTAGEINTRO_H
+#define SCENESTAGEINTRO_H
 
 #include "Scene.h"
+#include "SceneMatch.h"
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>
 
-class SceneMenu : public Scene {
+class SceneStageIntro : public Scene {
 public:
-    SceneMenu();
-    ~SceneMenu() override = default;
+    SceneStageIntro(int stage = 1, float duration = 1.75f);
+    ~SceneStageIntro() override = default;
 
     void handleEvent(const sf::Event& event, Game& game) override;
     void update(float dt, Game& game) override;
     void draw(sf::RenderWindow& window) override;
 
 private:
-    void activateSelection(Game& game);
-    void updateSelectionColors();
-
+    int m_stage;
+    float m_timer;
     sf::Font m_font;
-    sf::Text m_title;
-    sf::Text m_startText;
-    sf::Text m_optionsText;
-    sf::Text m_exitText;
     bool m_fontLoaded = false;
-    int m_selectedOption = 0;
+    sf::Text m_text;
 };
 
 #endif

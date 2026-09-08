@@ -2,6 +2,7 @@
 #include "Bullet.h"
 #include <algorithm>
 #include <cmath>
+#include <SFML/Graphics/CircleShape.hpp>
 
 using namespace sf;
 
@@ -12,7 +13,7 @@ Player::Player(const Texture& tex, const Vector2f& pos) {
 }
 
 Player::Player(const Vector2f& pos) {
-    setTexture("player.png", sf::Color(80, 180, 255), 48, 48);
+    setTexture("player.png", sf::Color(12, 183, 242), 48, 48);
     setPosition(pos);
     setRotation(0.f);
 }
@@ -55,6 +56,17 @@ void Player::draw(RenderWindow& win) const {
     }
 
     Entity::draw(win);
+
+    if (hasShield()) {
+        const Vector2f pos = getPosition();
+        CircleShape aura(28.f);
+        aura.setOrigin(28.f, 28.f);
+        aura.setPosition(pos);
+        aura.setFillColor(Color(12, 183, 242, 60));
+        aura.setOutlineColor(Color(12, 183, 242, 180));
+        aura.setOutlineThickness(2.f);
+        win.draw(aura);
+    }
 }
 
 std::vector<std::unique_ptr<Bullet>> Player::shoot(const Texture& bulletTexture) {
